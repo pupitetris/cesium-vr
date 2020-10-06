@@ -207,14 +207,18 @@ var CesiumVR = (function() {
     slave._transformChanged = true;
     master.frustum.clone(slave.frustum);
 
-    slave.frustum.setOffset(0.0, 0.0);
+    // slave.frustum.setOffset(0.0, 0.0);
+    slave.frustum.xOffset = 0.0;
+    slave.frustum.yOffset = 0.0;
 
     if (eye === 'right' || eye === 'left') {
       // Get the correct eye translation.
       translation = this.xEyeTranslation[eye] * this.IPDScale;
 
       // Update the frustum offset, aspect ratio and fov for the eye.
-      slave.frustum.setOffset(this.fovScaleAndOffset[eye].offset.x, 0.0); // Assumes only x offset is required.
+      // slave.frustum.setOffset(this.fovScaleAndOffset[eye].offset.x, 0.0); // Assumes only x offset is required.
+      slave.frustum.xOffset = this.fovScaleAndOffset[eye].offset.x;
+      slave.frustum.yOffset = 0.0;
       slave.frustum.aspectRatio = this.fovAspectRatio[eye];
       if (this.fovAspectRatio[eye] > 1.0) {
         // x is the major fov

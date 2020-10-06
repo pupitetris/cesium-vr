@@ -1,7 +1,7 @@
 "use strict";
 
 var lofi = false;
-var vrEnabled = false;
+var vrEnabled = true;
 var useWebGL = false;
 
 var canvasL = document.createElement('canvas');
