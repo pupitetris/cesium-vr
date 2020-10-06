@@ -30,7 +30,8 @@ function createImageryProvider() {
   } else {
     return new Cesium.BingMapsImageryProvider({
       url : '//dev.virtualearth.net',
-      mapStyle : Cesium.BingMapsStyle.AERIAL
+      mapStyle : Cesium.BingMapsStyle.AERIAL,
+      key: bingKey,
     // mapStyle : Cesium.BingMapsStyle.AERIAL_WITH_LABELS
     });
   }
@@ -40,14 +41,12 @@ function createTerrainProvider() {
   if (lofi) {
     return new Cesium.EllipsoidTerrainProvider();
   } else {
-    return new Cesium.CesiumTerrainProvider({
-      url : '//assets.agi.com/stk-terrain/world'
-    });
+    return Cesium.createWorldTerrain();
   }
 }
 
 function createScene(canvas) {
-  Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0ODA2NzYzYi1kZjhmLTQxM2EtYTZmMi01ZGM1YTIzNzcyYmEiLCJpZCI6MjE3MzAsImlhdCI6MTYwMTA2NDIzNH0.HFqSwclNtOuHpKLNRsIRLM8du0YtE0wm_dwgDAfEAfU";
+  Cesium.Ion.defaultAccessToken = cesiumKey;
   var scene = new Cesium.Scene({canvas : canvas});
 
   // // Clone the frustum properties into our patched frustum object...
@@ -58,8 +57,8 @@ function createScene(canvas) {
   var primitives = scene.primitives;
 
   var cb = new Cesium.Globe(ellipsoid);
-  // cb.imageryLayers.addImageryProvider(createImageryProvider());
-  // cb.terrainProvider = createTerrainProvider();
+  cb.imageryLayers.addImageryProvider(createImageryProvider());
+  cb.terrainProvider = createTerrainProvider();
 
   scene.globe = cb;
 
