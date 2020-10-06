@@ -2,6 +2,7 @@
 
 var lofi = false;
 var vrEnabled = false;
+var useWebGL = false;
 
 var canvasL = document.createElement('canvas');
 canvasL.className = "fullSize";
@@ -13,7 +14,7 @@ canvasR.className = "fullSize";
 document.getElementById('cesiumContainerRight').appendChild(canvasR);
 document.getElementById("cesiumContainerRight").style.visibility = vrEnabled ? "visible" : "hidden";
 
-var canvasCopy = new CanvasCopy(canvasR, false);
+var canvasCopy = new CanvasCopy(canvasR, useWebGL);
 
 var WakeLock = CesiumVRUtil.getWakeLock();
 var wakelock = new WakeLock();
@@ -46,12 +47,13 @@ function createTerrainProvider() {
 }
 
 function createScene(canvas) {
+  Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0ODA2NzYzYi1kZjhmLTQxM2EtYTZmMi01ZGM1YTIzNzcyYmEiLCJpZCI6MjE3MzAsImlhdCI6MTYwMTA2NDIzNH0.HFqSwclNtOuHpKLNRsIRLM8du0YtE0wm_dwgDAfEAfU";
   var scene = new Cesium.Scene({canvas : canvas});
 
-  // Clone the frustum properties into our patched frustum object...
-  var patchedFrustum = scene.camera.frustum.clone(new PerspectiveFrustumPatch());
-  // Patch the camera frustum prototype...
-  scene.camera.frustum = patchedFrustum;
+  // // Clone the frustum properties into our patched frustum object...
+  // var patchedFrustum = scene.camera.frustum.clone(new PerspectiveFrustumPatch());
+  // // Patch the camera frustum prototype...
+  // scene.camera.frustum = patchedFrustum;
 
   var primitives = scene.primitives;
 
@@ -106,7 +108,7 @@ var setCameraParams = function(_, camera) {
   camera.direction = _.direction;
 };
 
-var cesiumVR = new CesiumVR(100.0, run);
+var cesiumVR = vrEnabled ? new CesiumVR(100.0, run) : run();
 
 var container = document.getElementById('container');
 
