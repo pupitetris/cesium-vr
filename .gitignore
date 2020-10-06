@@ -1,2 +1,4 @@
 .project
 var.js
+cert.pem
+key.pem

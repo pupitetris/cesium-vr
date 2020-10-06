@@ -80,3 +80,5 @@ var CanvasCopy = (function() {
   return CanvasCopy;
 
 })();
+
+export {CanvasCopy};

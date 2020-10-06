@@ -1,7 +1,10 @@
-"use strict";
+
+import {CanvasCopy} from './src/CanvasCopy.js';
+import {CesiumVRUtil} from './src/CesiumVRUtil.js';
+import {bingKey, cesiumKey} from './var.js';
 
 var lofi = false;
-var vrEnabled = true;
+var vrEnabled = false;
 var useWebGL = false;
 
 var canvasL = document.createElement('canvas');

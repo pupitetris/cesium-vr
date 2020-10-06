@@ -103,3 +103,5 @@ CesiumVRUtil.getWakeLock = function() {
     return AndroidWakeLock;
   }
 }
+
+export {CesiumVRUtil};
