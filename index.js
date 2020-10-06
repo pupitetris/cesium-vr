@@ -58,8 +58,8 @@ function createScene(canvas) {
   var primitives = scene.primitives;
 
   var cb = new Cesium.Globe(ellipsoid);
-  cb.imageryLayers.addImageryProvider(createImageryProvider());
-  cb.terrainProvider = createTerrainProvider();
+  // cb.imageryLayers.addImageryProvider(createImageryProvider());
+  // cb.terrainProvider = createTerrainProvider();
 
   scene.globe = cb;
 
