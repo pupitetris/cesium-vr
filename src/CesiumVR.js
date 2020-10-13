@@ -7,13 +7,13 @@ var CesiumVR = (function() {
   }
 
   // Given a hmd device and a eye, returns the aspect ratio for that eye
-  function getAspectRatio(params) {
-    var rect = params.renderRect;
-    if (typeof rect === 'undefined') {
+  function getAspectRatio(viewport) {
+    // var rect = params.renderRect;
+    if (typeof viewport === 'undefined') {
       // Must be polyfill device. Revert to browser window ratio.
-      rect = window.screen;
+      viewport = window.screen;
     }
-    return rect.width / rect.height;
+    return viewport.width / viewport.height;
   }
   
   // Calculates the required scaling and offsetting of a symmetrical fov given an asymmetrical fov.
@@ -52,7 +52,7 @@ var CesiumVR = (function() {
    * @param {Function} callback     [description]
    * @param {[type]}   errorHandler [description]
    */
-  var CesiumVR = function(scale, callback, errorHandler) {
+  var CesiumVR = function(scale, session, errorHandler) {
     this.errorHandler = typeof errorHandler === 'undefined' ? defaultErrorHandler : errorHandler;
 
     this.errorMsg = "A VR-enabled browser is required for Virtual Reality Mode. Please visit http://mozvr.com/downloads for more details.";
@@ -69,89 +69,91 @@ var CesiumVR = (function() {
     // The Interpupillary Distance scalar
     this.IPDScale = scale > 0.0 ? scale : 1.0;
 
+    this.session = session;
+
     var that = this;
 
     /**
      * Configures CesiumVR for the attached VR devices.
      */
-    function EnumerateVRDevices(devices) {
-      // First find an HMD device
-      for (var i = 0; i < devices.length; ++i) {
-        if (devices[i] instanceof HMDVRDevice) {
-          that.hmdDevice = devices[i];
-          break;
-        }
-      }
+    // function EnumerateVRDevices(devices) {
+    //   // First find an HMD device
+    //   for (var i = 0; i < devices.length; ++i) {
+    //     if (devices[i] instanceof HMDVRDevice) {
+    //       that.hmdDevice = devices[i];
+    //       break;
+    //     }
+    //   }
 
-      console.log(devices);
+    //   console.log(devices);
 
-      if (!that.hmdDevice) {
-        // No HMD detected.
-        that.errorHandler("No HMD detected");
-        return;
-      }
+    //   if (!that.hmdDevice) {
+    //     // No HMD detected.
+    //     that.errorHandler("No HMD detected");
+    //     return;
+    //   }
 
-      // Next find a sensor that matches the HMD hardwareUnitId
-      for (i = 0; i < devices.length; ++i) {
-        if (devices[i] instanceof PositionSensorVRDevice &&
-             (!that.hmdDevice || devices[i].hardwareUnitId == that.hmdDevice.hardwareUnitId)) {
-          that.sensorDevice = devices[i];
-          break;
-        }
-      }
+    //   // Next find a sensor that matches the HMD hardwareUnitId
+    //   for (i = 0; i < devices.length; ++i) {
+    //     if (devices[i] instanceof PositionSensorVRDevice &&
+    //          (!that.hmdDevice || devices[i].hardwareUnitId == that.hmdDevice.hardwareUnitId)) {
+    //       that.sensorDevice = devices[i];
+    //       break;
+    //     }
+    //   }
 
-      if (!that.sensorDevice) {
-        // No HMD sensor detected.
-        that.errorHandler("No HMD sensor detected");
-        return;
-      }
+    //   if (!that.sensorDevice) {
+    //     // No HMD sensor detected.
+    //     that.errorHandler("No HMD sensor detected");
+    //     return;
+    //   }
 
-      // We now have our devices... let's calculate all the required setup information...
-      if (that.hmdDevice) {
+    //   // We now have our devices... let's calculate all the required setup information...
+    //   if (that.hmdDevice) {
         // Holds information about the x-axis eye separation in the world.
 
-        var leftParams = that.hmdDevice.getEyeParameters('left');
-        var rightParams = that.hmdDevice.getEyeParameters('right');
+        // var leftParams = that.hmdDevice.getEyeParameters('left');
+        // var rightParams = that.hmdDevice.getEyeParameters('right');
 
-        that.xEyeTranslation = {
-          left  : leftParams.eyeTranslation.x,
-          right : rightParams.eyeTranslation.x
-        };
+        // that.xEyeTranslation = {
+        //   left  : leftParams.eyeTranslation.x,
+        //   right : rightParams.eyeTranslation.x
+        // };
 
-        // Holds information about the recommended FOV for each eye for the detected device.
-        that.fovs = {
-          left  : leftParams.recommendedFieldOfView,
-          right : rightParams.recommendedFieldOfView
-        };
+        // // Holds information about the recommended FOV for each eye for the detected device.
+        // that.fovs = {
+        //   left  : leftParams.recommendedFieldOfView,
+        //   right : rightParams.recommendedFieldOfView
+        // };
 
-        // Holds the aspect ratio information about each eye
-        that.fovAspectRatio = {
-          left  : getAspectRatio(leftParams),
-          right : getAspectRatio(rightParams)
-        };
+        // // Holds the aspect ratio information about each eye
+        // that.fovAspectRatio = {
+        //   left  : getAspectRatio(leftParams),
+        //   right : getAspectRatio(rightParams)
+        // };
 
-        // Holds the fov scaling and offset information for each eye.
-        that.fovScaleAndOffset = {
-          left  : fovToScaleAndOffset(that.fovs.left),
-          right : fovToScaleAndOffset(that.fovs.right)
-        };
-      }
+        // // Holds the fov scaling and offset information for each eye.
+        // that.fovScaleAndOffset = {
+        //   left  : fovToScaleAndOffset(that.fovs.left),
+        //   right : fovToScaleAndOffset(that.fovs.right)
+        // };
+      // }
 
-      if (typeof callback !== 'undefined') {
-        callback();
-      }
-    }
+    //   if (typeof callback !== 'undefined') {
+    //     callback();
+    //   }
+    // }
 
-    // Slight discrepancy in the api for Firefox/Chrome WebVR currently.
-    if (navigator.getVRDevices) {
-      navigator.getVRDevices().then(EnumerateVRDevices);
-    } else if (navigator.mozGetVRDevices) {
-      navigator.mozGetVRDevices(EnumerateVRDevices);
-    } else {
-      // TODO: No VR API detected...
-      console.log("No WebVR API detected.");
-      that.errorHandler(this.errorMsg);
-    }
+    // // Slight discrepancy in the api for Firefox/Chrome WebVR currently.
+    // if (navigator.getVRDevices) {
+    //   navigator.getVRDevices().then(EnumerateVRDevices);
+    // } else if (navigator.mozGetVRDevices) {
+    //   navigator.mozGetVRDevices(EnumerateVRDevices);
+    // } else {
+    //   // TODO: No VR API detected...
+    //   console.log("No WebVR API detected.");
+    //   that.errorHandler(this.errorMsg);
+    // }
   };
 
   var toQuat = function(r) {
@@ -161,13 +163,65 @@ var CesiumVR = (function() {
     return new Cesium.Quaternion(r.x, r.y, r.z, r.w);
   };
 
+  var getView = function(pose, left_or_right) {
+    var views = pose.views;
+    for (let view of pose.views) {
+      if (view.eye == left_or_right) {
+        return view;
+      }
+    }
+  };
+
+  CesiumVR.prototype.deriveRecommendedParameters = function(pose) {
+    var leftView = getView(pose, 'left');
+    var rightView = getView(pose, 'right');
+
+    var glView = this.session.renderState.baseLayer;
+    var leftParams = glView.getViewport(leftView);
+    var rightParams = glView.getViewport(rightView);
+
+    this.xEyeTranslation = {
+      left : leftParams.x, // left  : leftParams.eyeTranslation.x,
+      right : rightParams.x // right : rightParams.eyeTranslation.x
+    };
+
+    // Holds information about the recommended FOV for each eye for the detected device.
+    let upDown = 106;
+    let leftRight = 94;
+    let fov = {
+      upDegrees: upDown / 2, 
+      downDegrees: upDown / 2, 
+      leftDegrees: leftRight / 2,
+      rightDegrees: leftRight / 2, 
+      zNear: 0.1, 
+      zFar: 10000
+    };
+    
+    this.fovs = {
+      left  : fov,
+      right : fov
+    };
+
+    // Holds the aspect ratio information about each eye
+    this.fovAspectRatio = {
+      left  : getAspectRatio(leftParams),
+      right : getAspectRatio(rightParams)
+    };
+
+    // Holds the fov scaling and offset information for each eye.
+    this.fovScaleAndOffset = {
+      left  : fovToScaleAndOffset(this.fovs.left),
+      right : fovToScaleAndOffset(this.fovs.right)
+    };
+  }
+
   /**
    * Returns the orientation of the HMD as a quaternion.
 
    * @return {Cesium.Quaternion}
    */
-  CesiumVR.prototype.getRotation = function() {
-    return toQuat(this.sensorDevice.getState().orientation);
+  CesiumVR.prototype.getRotation = function(pose) {
+    return toQuat(getView(pose, 'left').transform.orientation);
   };
 
   /**
@@ -268,8 +322,8 @@ var CesiumVR = (function() {
    * 
    * @param  {Cesium.Camera}     camera           The camera to rotate
    */
-  CesiumVR.prototype.applyVRRotation = function(camera) {
-    var vrRotationMatrix = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.inverse(this.getRotation(), new Cesium.Quaternion()));
+  CesiumVR.prototype.applyVRRotation = function(camera, pose) {
+    var vrRotationMatrix = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.inverse(this.getRotation(pose), new Cesium.Quaternion()));
 
     // Translate camera back to origin
     var pos = camera.position;
@@ -355,3 +409,5 @@ var CesiumVR = (function() {
   return CesiumVR;
 
 }());
+
+export {CesiumVR};
