@@ -46,7 +46,7 @@ let xrRefSpace = null;
 let gl = null;
 let renderer = null;
 let scene = new Scene();
-scene.enableStats(false);
+// scene.enableStats(false);
 let cesiumScene = null;
 let cesiumCamera = null;
 
@@ -82,7 +82,14 @@ function createScene(canvas) {
   var scene = new Cesium.Scene(
     {
       canvas : canvas,
-      // contextOptions: {webgl: {xrCompatible : true}}  // This line breaks it.
+      contextOptions: {
+        webgl: {
+          xrCompatible : true, 
+          alpha: true,
+          preserveDrawingBuffer : true,
+        }
+      },
+      scene3DOnly : true,
       // requestRenderMode: true,
     }
   );
@@ -188,6 +195,7 @@ function onSessionStarted(session) {
   session.addEventListener('end', onSessionEnded);
 
   updateRenderer(session, false);
+  // setupScene(session);
 
   cVR = new CesiumVR(100, session);
 
@@ -202,15 +210,35 @@ function onSessionStarted(session) {
   });
 }
 
-function updateRenderer(session, is_cesium) {
+function setupScene(session) {
+
+}
+
+function updateRenderer(session, is_cesium, context) {
   // Create a WebGL context to render with, initialized to be compatible
   // with the XRDisplay we're presenting to.
-  gl = createWebGLContext({
-    xrCompatible: true
-  });
+  
+    // ###### CESIUM ######
 
+
+  // gl = createWebGLContext({
+  //   xrCompatible: true
+  // });
+  
+  if (cesiumScene === null) {
+    // var canvas = document.querySelector("canvas");
+    var canvas = document.createElement('canvas');
+    document.querySelector("#container").appendChild(canvas);
+    cesiumScene = createScene(canvas);
+    cesiumCamera = cesiumScene.camera;
+    cesiumScene.initializeFrame();
+    cesiumScene.render();
+  }
+
+  gl = cesiumScene.context._gl;
   // Create a renderer with that GL context (this is just for the samples
   // framework and has nothing to do with WebXR specifically.)
+  // renderer = new Renderer(gl);
   renderer = new Renderer(gl);
 
   // Set the scene's renderer, which creates the necessary GPU resources.
@@ -219,8 +247,8 @@ function updateRenderer(session, is_cesium) {
   // Use the new WebGL context to create a XRWebGLLayer and set it as the
   // sessions baseLayer. This allows any content rendered to the layer to
   // be displayed on the XRDevice.
-  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
-  
+  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, cesiumScene.context._originalGLContext) });
+  var i = 0;
 }
 
 // Called when the user clicks the 'Exit XR' button. In response we end
@@ -264,39 +292,13 @@ function onXRFrame(t, frame) {
   // framebuffer cleared, so tracking loss means the scene will simply
   // disappear.
   if (pose) {
-  
-    // ###### CESIUM ######
-    if (cesiumScene === null) {
-      var canvas = document.querySelector("canvas");
-      cesiumScene = createScene(canvas);
-      cesiumCamera = cesiumScene.camera;
-    }
-  
-    var tick = function() {
-      cesiumScene.initializeFrame();
-  
-      var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
-      cVR.deriveRecommendedParameters(pose);
-      cVR.applyVRRotation(cesiumCamera, pose);
-      var VRCam = Cesium.Camera.clone(cesiumCamera);
-      cVR.configureSlaveCamera(VRCam, cesiumCamera, 'right');
-      cesiumScene.render();
-      cVR.configureSlaveCamera(VRCam, cesiumCamera, 'left');
-      cesiumScene.render();
-      cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
-      
-      // Cesium.requestAnimationFrame(tick);
-    }
-  
-    Cesium.requestAnimationFrame(tick);
-
     let glLayer = session.renderState.baseLayer;
 
     // If we do have a valid pose, bind the WebGL layer's framebuffer,
     // which is where any content to be displayed on the XRDevice must be
     // rendered.
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-    // gl.bindFramebuffer(Cesium.Framebuffer, glLayer.framebuffer);
 
     // Clear the framebuffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -307,6 +309,20 @@ function onXRFrame(t, frame) {
       let viewport = glLayer.getViewport(view);
       gl.viewport(viewport.x, viewport.y,
                   viewport.width, viewport.height);
+
+      Cesium.requestAnimationFrame(()=>{
+        cesiumScene.initializeFrame();
+    
+        var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
+        cVR.deriveRecommendedParameters(pose);
+        cVR.applyVRRotation(cesiumCamera, pose);
+        var VRCam = Cesium.Camera.clone(cesiumCamera);
+        cVR.configureSlaveCamera(VRCam, cesiumCamera, 'right');
+        cesiumScene.render();
+        cVR.configureSlaveCamera(VRCam, cesiumCamera, 'left');
+        cesiumScene.render();
+        cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
+      });
 
       // Draw this view of the scene. What happens in this function really
       // isn't all that important. What is important is that it renders
