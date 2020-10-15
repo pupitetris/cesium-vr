@@ -1,4 +1,6 @@
-.project
+*.swp
+*.DS_STORE
+.idea
+bin/
 var.js
-cert.pem
-key.pem
+star.pem

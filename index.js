@@ -231,6 +231,14 @@ function updateRenderer(session, is_cesium, context) {
     document.querySelector("#container").appendChild(canvas);
     cesiumScene = createScene(canvas);
     cesiumCamera = cesiumScene.camera;
+    cesiumCamera.flyTo({
+      destination : Cesium.Cartesian3.fromDegrees(-111.62, 40.32, 3500.0),
+      orientation : {
+        heading : Cesium.Math.toRadians(175.0),
+        pitch : Cesium.Math.toRadians(0.0),
+        roll : 0.0
+      }
+    });
     cesiumScene.initializeFrame();
     cesiumScene.render();
   }
@@ -316,11 +324,11 @@ function onXRFrame(t, frame) {
         var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
         cVR.deriveRecommendedParameters(pose);
         cVR.applyVRRotation(cesiumCamera, pose);
-        var VRCam = Cesium.Camera.clone(cesiumCamera);
-        cVR.configureSlaveCamera(VRCam, cesiumCamera, 'right');
+        // var VRCam = Cesium.Camera.clone(cesiumCamera);
+        // cVR.configureSlaveCamera(VRCam, cesiumCamera, 'right');
         cesiumScene.render();
-        cVR.configureSlaveCamera(VRCam, cesiumCamera, 'left');
-        cesiumScene.render();
+        // cVR.configureSlaveCamera(VRCam, cesiumCamera, 'left');
+        // cesiumScene.render();
         cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
       });
 
