@@ -301,7 +301,7 @@ function onXRFrame(t, frame) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 
     // Clear the framebuffer
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Loop through each of the views reported by the frame and draw them
     // into the corresponding viewport.
