@@ -4,3 +4,5 @@
 bin/
 var.js
 star.pem
+cert.pem
+key.pem
