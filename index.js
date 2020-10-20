@@ -218,13 +218,7 @@ function updateRenderer(session, is_cesium, context) {
   // Create a WebGL context to render with, initialized to be compatible
   // with the XRDisplay we're presenting to.
   
-    // ###### CESIUM ######
-
-
-  // gl = createWebGLContext({
-  //   xrCompatible: true
-  // });
-  
+    // ###### CESIUM ######  
   if (cesiumScene === null) {
     // var canvas = document.querySelector("canvas");
     var canvas = document.createElement('canvas');
@@ -232,7 +226,9 @@ function updateRenderer(session, is_cesium, context) {
     cesiumScene = createScene(canvas);
     cesiumCamera = cesiumScene.camera;
     cesiumCamera.flyTo({
-      destination : Cesium.Cartesian3.fromDegrees(-111.62, 40.32, 3500.0),
+      destination : Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600),  // Timp
+      // destination : Cesium.Cartesian3.fromDegrees(-103.457939, 43.878265, 1650),  // Mt Rushmore
+      // destination : Cesium.Cartesian3.fromDegrees(123.042885, 10.425316, 500),  // Mt Rushmore
       orientation : {
         heading : Cesium.Math.toRadians(175.0),
         pitch : Cesium.Math.toRadians(0.0),
@@ -305,7 +301,6 @@ function onXRFrame(t, frame) {
     // If we do have a valid pose, bind the WebGL layer's framebuffer,
     // which is where any content to be displayed on the XRDevice must be
     // rendered.
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 
     // Clear the framebuffer
@@ -318,19 +313,26 @@ function onXRFrame(t, frame) {
       gl.viewport(viewport.x, viewport.y,
                   viewport.width, viewport.height);
 
-      Cesium.requestAnimationFrame(()=>{
-        cesiumScene.initializeFrame();
-    
-        var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
-        cVR.deriveRecommendedParameters(pose);
-        cVR.applyVRRotation(cesiumCamera, pose);
-        // var VRCam = Cesium.Camera.clone(cesiumCamera);
-        // cVR.configureSlaveCamera(VRCam, cesiumCamera, 'right');
-        cesiumScene.render();
-        // cVR.configureSlaveCamera(VRCam, cesiumCamera, 'left');
-        // cesiumScene.render();
-        cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
-      });
+      for (let source of session.inputSources) {
+        if (source.gamepad && source.handedness == 'right') {
+          // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
+          var axes = source.gamepad.axes;
+          var new_position = Cesium.Cartesian3.fromRadians(
+            cesiumCamera.positionCartographic.longitude + (axes[2] * 0.0001)*-1,
+            cesiumCamera.positionCartographic.latitude + (axes[3] * 0.0001),
+            cesiumCamera.positionCartographic.height
+          );
+          //var new_position =  Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600)
+          cesiumCamera.position = new_position;
+        }
+      }
+      cesiumScene.initializeFrame();
+        
+      var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
+      cVR.deriveRecommendedParameters(pose);
+      cVR.applyVRRotation(cesiumCamera, pose);
+      cesiumScene.render();
+      cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
 
       // Draw this view of the scene. What happens in this function really
       // isn't all that important. What is important is that it renders
@@ -339,7 +341,7 @@ function onXRFrame(t, frame) {
       // projection matrix and view transform from the current view.
       // We bound the framebuffer and viewport up above, and are passing
       // in the appropriate matrices here to be used when rendering.
-      scene.draw(view.projectionMatrix, view.transform);
+      //scene.draw(view.projectionMatrix, view.transform);
     }
   } else {
     // There's several options for handling cases where no pose is given.
