@@ -1,12 +1,13 @@
+import {WebXRButton} from './js/util/webxr-button.js';
+import {Scene} from './js/render/scenes/scene.js';
+import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
+import {QueryArgs} from './js/util/query-args.js';
+
 import * as THREE from './lib/three/three.module.js';
 import {CanvasCopy} from './src/CanvasCopy.js';
 import {CesiumVR} from './src/CesiumVR.js'
 import {CesiumVRUtil} from './src/CesiumVRUtil.js';
 import {bingKey, cesiumKey} from './var.js';
-import {WebXRButton} from './src/util/webxr-button.js';
-import {Renderer, createWebGLContext} from './src/render/core/renderer.js';
-import {Scene} from './src/render/scenes/scene.js';
-import {QueryArgs} from './js/util/query-args.js';
 
 // If requested, use the polyfill to provide support for mobile devices
 // and devices which only support WebVR.
@@ -19,18 +20,6 @@ var lofi = false;
 var vrEnabled = false;
 var useWebGL = true;
 var useWebVR = true;
-
-// var canvasL = document.createElement('canvas');
-// canvasL.className = "fullSize";
-// document.getElementById('cesiumContainerLeft').appendChild(canvasL);
-// document.getElementById("cesiumContainerLeft").style.width = vrEnabled ? "50%" : "100%";
-
-// var canvasR = document.createElement('canvas');
-// canvasR.className = "fullSize";
-// document.getElementById('cesiumContainerRight').appendChild(canvasR);
-// document.getElementById("cesiumContainerRight").style.visibility = vrEnabled ? "visible" : "hidden";
-
-// var canvasCopy = new CanvasCopy(canvasR, useWebGL);
 
 var WakeLock = CesiumVRUtil.getWakeLock();
 var wakelock = new WakeLock();
