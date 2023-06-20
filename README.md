@@ -149,9 +149,9 @@ For each frame:
 We have applied a small modification to Cesium's PerspectiveFrustum class.
 This allows us to apply the required frustum offset e.g. so the standard globe doesn't render in the center of each canvas. These modifications are currently being patched into Cesium by replacing the cameras frustum object with our implementation.
 
-### WebVR
+### WebXR
 
-For more information regarding WebVR or the VR-enabled browsers, checkout [mozvr.com](http://mozvr.com), [Vladimir Vukićević's blog](http://blog.bitops.com/blog/2014/06/26/first-steps-for-vr-on-the-web/) (Firefox VR) or [Brandon Jones' blog](http://blog.tojicode.com/2014/07/bringing-vr-to-chrome.html) (Chrome VR).
+For more information regarding WebXR or the VR-enabled browsers, check out [immersiveweb.dev](https://immersiveweb.dev/).
 
 ### Contributing
 
