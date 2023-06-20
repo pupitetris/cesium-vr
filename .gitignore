@@ -2,7 +2,9 @@
 *.DS_STORE
 .idea
 bin/
-var.js
-star.pem
-cert.pem
-key.pem
+/htdocs/var.js
+/star.pem
+/cert.pem
+/key.pem
+/star.key
+/node_modules/
