@@ -1,5 +1,6 @@
-<a href="http://nicta.com.au/"><img align="right" src="htdocs/images/nicta_logo.png"></a>
-<br>
+<p align="right">
+[![NICTA Logo](htdocs/images/nicta_logo.png)](http://data61.csiro.au/)
+</p>
 
 # cesium-vr
 
@@ -14,7 +15,7 @@ cesium-vr comes with a demo that exemplifies how to use cesium-vr:
 [![screengrab](htdocs/images/screengrab.jpg)](http://nicta.github.io/cesium-vr/)
 
 The source code of the demo resides in
-[`htdocs/index.js`](https://github.com/pupitetris/cesium-vr/blob/pupitetris/htdocs/index.js)
+[htdocs/index.js](htdocs/index.js)
 
 ## Usage
 
@@ -180,7 +181,7 @@ request.
 ## License
 
 The **cesium-vr** plugin code is released under Apache 2.0 (see
-[LICENSE.md](https://github.com/pupitetris/cesium-vr/blob/pupitetris/LICENSE.md)).
+[LICENSE.md](pupitetris/LICENSE.md)).
 
 This software will need you to go and acquire third party software in
 order to work properly; and NICTA is not suggesting that downloading
