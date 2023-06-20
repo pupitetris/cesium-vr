@@ -11,7 +11,7 @@ import {bingKey, cesiumKey} from './var.js';
 
 // If requested, use the polyfill to provide support for mobile devices
 // and devices which only support WebVR.
-import WebXRPolyfill from './js/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
+import WebXRPolyfill from './lib/webxr/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
 if (QueryArgs.getBool('usePolyfill', true)) {
   let polyfill = new WebXRPolyfill();
 }
