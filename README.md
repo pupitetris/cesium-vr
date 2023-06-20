@@ -180,7 +180,7 @@ request.
 ## License
 
 The **cesium-vr** plugin code is released under Apache 2.0 (see
-[LICENSE.md](https://github.com/pupitetris/cesium-vr/blob/pupitetris/LICENSE.md).
+[LICENSE.md](https://github.com/pupitetris/cesium-vr/blob/pupitetris/LICENSE.md)).
 
 This software will need you to go and acquire third party software in
 order to work properly; and NICTA is not suggesting that downloading
