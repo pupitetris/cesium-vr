@@ -1,7 +1,7 @@
-import {WebXRButton} from './js/util/webxr-button.js';
-import {Scene} from './js/render/scenes/scene.js';
-import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
-import {QueryArgs} from './js/util/query-args.js';
+import {WebXRButton} from './lib/webxr/util/webxr-button.js';
+import {Scene} from './lib/webxr/render/scenes/scene.js';
+import {Renderer, createWebGLContext} from './lib/webxr/render/core/renderer.js';
+import {QueryArgs} from './lib/webxr/util/query-args.js';
 
 import * as THREE from './lib/three/three.module.js';
 import {CanvasCopy} from './src/CanvasCopy.js';
