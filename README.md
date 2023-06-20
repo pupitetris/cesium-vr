@@ -1,6 +1,4 @@
-<p align="right">
-[![NICTA Logo](htdocs/images/nicta_logo.png)](http://data61.csiro.au/)
-</p>
+<p align="right"><a href="http://data61.csiro.au/"><img src="htdocs/images/nicta_logo.png"></a></p>
 
 # cesium-vr
 
