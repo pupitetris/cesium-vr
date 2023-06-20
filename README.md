@@ -1,38 +1,139 @@
-<a href="http://nicta.com.au/"><img align="right" src="images/nicta_logo.png"></a>
+<a href="http://nicta.com.au/"><img align="right" src="htdocs/images/nicta_logo.png"></a>
 <br>
 
 # cesium-vr
 
-A plugin for [Cesium WebGL Virtual Globe](http://cesiumjs.org) to support VR devices using a VR-enabled browser. Install [Firefox Nightly and the WebVR enabler](http://mozvr.com/downloads/) and try the [live demo](http://nicta.github.io/cesium-vr/).
+A plugin for [Cesium WebGL Virtual Globe](http://cesiumjs.org) to
+support VR devices using a VR-enabled browser. This fork updates
+cesium-vr to the latest CesiumJS version and uses
+[WebXR](https://immersiveweb.dev/) which is the currently best
+standard/proposal for the integration of VR devices for the web.
 
-[![screengrab](images/screengrab.jpg)](http://nicta.github.io/cesium-vr/)
+cesium-vr comes with a demo that exemplifies how to use cesium-vr:
+
+[![screengrab](htdocs/images/screengrab.jpg)](http://nicta.github.io/cesium-vr/)
+
+The source code of the demo resides in
+[`htdocs/index.js`](https://github.com/pupitetris/cesium-vr/blob/pupitetris/htdocs/index.js)
 
 ## Usage
 
-- Make sure you have the Oculus 0.5.x runtime installed.
-- Install [Firefox Nightly and the WebVR enabler](http://mozvr.com/downloads/).
-- Run via a local http server from the project root directory, e.g. with node.js http-server
+Please note that WebXR API specifies the restriction of not being
+present in the browser unless the web page is loaded through `https`
+or from `localhost`. This applies for both tethered and standalone
+setups.
+
+Check [WebXR's support table](https://immersiveweb.dev/#supporttable)
+for a list of supporting web clients.
+
+### PC-VR (Tethered HMD or no HMD)
+
+- Run a [WebXR-enabled browser](https://caniuse.com/webxr).
+  - In the case of Firefox, you have to activate the `dom.vr.webxr.enabled` flag in `about:config`
+- Check the [WebXR Sample Pages](https://immersive-web.github.io/webxr-samples/) to check if your browser is WebXR-ready.
+
+  If you have no HMD a good option for development is to install a WebXR Emulator extension.
+  - **Chrome**:
+    - Mozilla Mixed Reality's [WebXR API Emulator](https://chrome.google.com/webstore/detail/webxr-api-emulator/mjddjgeghkdijejnciaefnkjmkafnnje)
+    - Meta's [Immersive Web Emulator](https://chrome.google.com/webstore/detail/immersive-web-emulator/cgffilbpcibhmcfbgggfhfolhkfbhmik)
+  - **Firefox**:
+    - Mozilla Mixed Reality's [WebXR API Emulator](https://addons.mozilla.org/en-US/firefox/addon/webxr-api-emulator/)
+  - **Edge**:
+    - Meta's [Immersive Web Emulator](https://microsoftedge.microsoft.com/addons/detail/immersive-web-emulator/hhlkbhldhffpeibcfggfndbkfohndamj)
+
+### Stand-alone HMD (Oculus/Meta Quest series, Pico HMD, etc)
+
+- **Option 1**: use http to localhost with [reverse port forwarding](https://medium.com/@lazerwalker/how-to-easily-test-your-webvr-and-webxr-projects-locally-on-your-oculus-quest-eec26a03b7ee).
+
+  No need for https certificate generation, but HMD must be used
+  connected to the computer through USB to reach the http server.
+
+  - Enable Developer mode
+  - Connect through USB
+  - Install `adb` (Debian Linux: `apt install adb`)
+	- If you have [SideQuest](https://sidequestvr.com/) up and
+      running, you can use that to issue the `adb reverse` shell command
+      and skip the manual adb setup.
+  - From a terminal, run `adb devices`
+	- Linux: If adb complaints about udev rules, you may need to create (as
+      `root`) the file `/lib/udev/rules/52-hmd.rules` with the
+      content:
+
+	```
+	SUBSYSTEM=="usb", ATTR{idVendor}=="2833", ATTR{idProduct}=="0186", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
+	```
+
+	- `idVendor`/`idProduct` may vary, check with `lsusb`
+	- Then run:
+	
+	```
+	sudo udevadm control --reload-rules
+	sudo udevadm trigger	
+	```
+	
+	- Make sure your user belongs to the group `plugdev` (run `id` to check).
+
+  - Authorize computer on HMD.
+  - Set up reverse forwarding through adb (`adb reverse tcp:8080 tcp:8080`)
+	- This may have to be reissued between sessions.
+  - Run HMD's web browser
+
+- **Option 2**: Run the http server with https (ssl) enabled.
+  - Can be used over WiFi
+  - You have to [create a self-signed
+    certificate](https://wiki.debian.org/Self-Signed_Certificate) or
+    if that won't work, use [Let's Encrypt](https://letsencrypt.org/)
+    to generate legit certificates for free, but you may have to pay
+    for a host or spoof the HMD's DNS system.
+
+### Final steps for both PC-VR and Stand-alone
+
+- Run a local http server from the project root directory, e.g. with node.js http-server
 
     ```
-    cd cesium-vr
+	sudo apt install node-http-server
+    cd cesium-vr/htdocs
+	ln -s ../src src
     http-server
     ```
+	
+	OR use the included python3 server:
+	
+	```
+	cd cesium-vr
+	python3 server.py
+	```
 
-- (optional) Plug in your VR headset. The code should still work even if you don't have one.
-- Start up Firefox Nightly and visit `http://localhost:8080`.
+- Using your browser, visit `http://localhost:8080/` (or `https://localhost:4443/`).
+
+### Interaction
+
 - Hit `Enter` to make the browser fullscreen and enter VR mode.
-- The mouse can be used on the left eye to navigate.  Number keys take you to some pre-set locations. Hit `L` at any time to level the camera to the globe surface.
-- The `WASD` keys allow horizontal movement with `Q` and `E` allowing vertical movement. Holding `Shift` speeds up all movement.
+- The mouse can be used on the left eye to navigate.  Number keys take
+  you to some pre-set locations. Hit `L` at any time to level the
+  camera to the globe surface.
+- The `WASD` keys allow horizontal movement with `Q` and `E` allowing
+  vertical movement. Holding `Shift` speeds up all movement.
 
-If you are having any problems, visit [mozvr.com](http://mozvr.com) to check you have correctly configured your VR device for use in Firefox Nightly. If you're still having troubles, feel free to post an issue on the GitHub repository.
+If you are having any problems, visit the [WebXR Sample
+Pages](https://immersive-web.github.io/webxr-samples/) to check you
+have correctly configured your VR device for use in your browser. If
+you're still having troubles, feel free to post an issue on the GitHub
+repository.
 
-### Testing
-At time of writing we have tested **cesium-vr** with Cesium 1.10 in Firefox Nightly 41.0a1 (2015-05-13) on Windows and OSX using the Oculus Rift Development Kit 2 and Oculus Runtime 0.5.0.1.
-Stereo rendering should work on other platforms but WebVR may not.
+## Testing
+
+*Note: obsolete info*
+
+At time of writing we have tested **cesium-vr** with Cesium 1.10 in
+Firefox Nightly 41.0a1 (2015-05-13) on Windows and OSX using the
+Oculus Rift Development Kit 2 and Oculus Runtime 0.5.0.1.  Stereo
+rendering should work on other platforms but WebVR may not.
 
 ## About
 
 ### Stereo Rendering
+
 To render stereo images within Cesium using a single scene and dual canvases the workflow is as follows.
 
 For each frame:
@@ -44,13 +145,16 @@ For each frame:
 * Render into left eye canvas.
 
 ### Frustum offsetting
+
 We have applied a small modification to Cesium's PerspectiveFrustum class.
 This allows us to apply the required frustum offset e.g. so the standard globe doesn't render in the center of each canvas. These modifications are currently being patched into Cesium by replacing the cameras frustum object with our implementation.
 
 ### WebVR
+
 For more information regarding WebVR or the VR-enabled browsers, checkout [mozvr.com](http://mozvr.com), [Vladimir Vukićević's blog](http://blog.bitops.com/blog/2014/06/26/first-steps-for-vr-on-the-web/) (Firefox VR) or [Brandon Jones' blog](http://blog.tojicode.com/2014/07/bringing-vr-to-chrome.html) (Chrome VR).
 
 ### Contributing
+
 Please let us know if you spot any errors in our implementation or have a useful extension.  The best way to do this is via a pull request.
 
 ## License
