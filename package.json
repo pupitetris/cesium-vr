@@ -1,0 +1,30 @@
+{
+  "name": "pupitetris-cesium-vr",
+  "version": "1.0.0",
+  "description": "<a href=\"http://nicta.com.au/\"><img align=\"right\" src=\"images/nicta_logo.png\"></a> <br>",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pupitetris/cesium-vr.git"
+  },
+  "author": "Arturo Espinosa",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/pupitetris/cesium-vr/issues"
+  },
+  "homepage": "https://github.com/pupitetris/cesium-vr#readme",
+  "dependencies": {
+    "cesium": "^1.106.1",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
