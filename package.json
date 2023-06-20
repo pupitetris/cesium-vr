@@ -13,8 +13,8 @@
     "type": "git",
     "url": "git+https://github.com/pupitetris/cesium-vr.git"
   },
-  "author": "Arturo Espinosa",
-  "license": "GPL-3.0-or-later",
+  "author": "NICTA and Cesium Contributors",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/pupitetris/cesium-vr/issues"
   },

@@ -28,33 +28,41 @@ for a list of supporting web clients.
 
 ### PC-VR (Tethered HMD or no HMD)
 
-- Run a [WebXR-enabled browser](https://caniuse.com/webxr).
-  - In the case of Firefox, you have to activate the `dom.vr.webxr.enabled` flag in `about:config`
-- Check the [WebXR Sample Pages](https://immersive-web.github.io/webxr-samples/) to check if your browser is WebXR-ready.
+For Valve Index, HTC Vive Cosmos/Pro, HP Reverb, Varjo, [etc](https://vr-compare.com/pcpowered).
 
-  If you have no HMD a good option for development is to install a WebXR Emulator extension.
-  - **Chrome**:
+- Run a [WebXR-enabled browser](https://caniuse.com/webxr).
+  - In the case of Firefox, you have to activate the
+    `dom.vr.webxr.enabled` flag in `about:config`
+- Check the [WebXR Sample Pages](https://immersive-web.github.io/webxr-samples/) 
+  to check if your browser is WebXR-ready.
+
+  If you have no HMD a good option for development is to install a
+  WebXR Emulator extension.
+
+  - **Google Chrome**:
     - Mozilla Mixed Reality's [WebXR API Emulator](https://chrome.google.com/webstore/detail/webxr-api-emulator/mjddjgeghkdijejnciaefnkjmkafnnje)
     - Meta's [Immersive Web Emulator](https://chrome.google.com/webstore/detail/immersive-web-emulator/cgffilbpcibhmcfbgggfhfolhkfbhmik)
-  - **Firefox**:
+  - **Mozilla Firefox**:
     - Mozilla Mixed Reality's [WebXR API Emulator](https://addons.mozilla.org/en-US/firefox/addon/webxr-api-emulator/)
-  - **Edge**:
+  - **Microsoft Edge**:
     - Meta's [Immersive Web Emulator](https://microsoftedge.microsoft.com/addons/detail/immersive-web-emulator/hhlkbhldhffpeibcfggfndbkfohndamj)
 
-### Stand-alone HMD (Oculus/Meta Quest series, Pico HMD, etc)
+### Standalone HMD
+
+For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standalone).
 
 - **Option 1**: use http to localhost with [reverse port forwarding](https://medium.com/@lazerwalker/how-to-easily-test-your-webvr-and-webxr-projects-locally-on-your-oculus-quest-eec26a03b7ee).
 
   No need for https certificate generation, but HMD must be used
   connected to the computer through USB to reach the http server.
 
-  - Enable Developer mode
-  - Connect through USB
-  - Install `adb` (Debian Linux: `apt install adb`)
+  - Enable Developer Mode in your headset.
+  - Connect to a host PC through USB
+  - Install `adb` in the host (Debian Linux: `apt install adb`)
 	- If you have [SideQuest](https://sidequestvr.com/) up and
-      running, you can use that to issue the `adb reverse` shell command
+      running, you can use that to issue the `adb reverse` command
       and skip the manual adb setup.
-  - From a terminal, run `adb devices`
+  - From a terminal in the host, run `adb devices`
 	- Linux: If adb complaints about udev rules, you may need to create (as
       `root`) the file `/lib/udev/rules/52-hmd.rules` with the
       content:
@@ -63,15 +71,19 @@ for a list of supporting web clients.
 	SUBSYSTEM=="usb", ATTR{idVendor}=="2833", ATTR{idProduct}=="0186", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
 	```
 
-	- `idVendor`/`idProduct` may vary, check with `lsusb`
-	- Then run:
+	- `idVendor`/`idProduct` may vary, check with `lsusb` and adjust
+      accordingly.
+	- Then to make the changes effective to the udev subsystem, run:
 	
 	```
 	sudo udevadm control --reload-rules
 	sudo udevadm trigger	
 	```
 	
-	- Make sure your user belongs to the group `plugdev` (run `id` to check).
+	- Make sure your user belongs to the group `plugdev` (run `id` to
+      check) or whatever permissions your distro requires for you to
+      use adb (`plugdev` on Debian allows members to mount USB mass
+      storage devices and other removable media).
 
   - Authorize computer on HMD.
   - Set up reverse forwarding through adb (`adb reverse tcp:8080 tcp:8080`)
@@ -88,7 +100,8 @@ for a list of supporting web clients.
 
 ### Final steps for both PC-VR and Stand-alone
 
-- Run a local http server from the project root directory, e.g. with node.js http-server
+- Run a local http server from the project root directory, e.g. with
+  node.js http-server
 
     ```
 	sudo apt install node-http-server
@@ -134,7 +147,8 @@ rendering should work on other platforms but WebVR may not.
 
 ### Stereo Rendering
 
-To render stereo images within Cesium using a single scene and dual canvases the workflow is as follows.
+To render stereo images within Cesium using a single scene and dual
+canvases the workflow is as follows.
 
 For each frame:
 
@@ -146,19 +160,29 @@ For each frame:
 
 ### Frustum offsetting
 
-We have applied a small modification to Cesium's PerspectiveFrustum class.
-This allows us to apply the required frustum offset e.g. so the standard globe doesn't render in the center of each canvas. These modifications are currently being patched into Cesium by replacing the cameras frustum object with our implementation.
+We have applied a small modification to Cesium's PerspectiveFrustum
+class.  This allows us to apply the required frustum offset e.g. so
+the standard globe doesn't render in the center of each canvas. These
+modifications are currently being patched into Cesium by replacing the
+cameras frustum object with our implementation.
 
 ### WebXR
 
-For more information regarding WebXR or the VR-enabled browsers, check out [immersiveweb.dev](https://immersiveweb.dev/).
+For more information regarding WebXR or the VR-enabled browsers, check
+out [immersiveweb.dev](https://immersiveweb.dev/).
 
 ### Contributing
 
-Please let us know if you spot any errors in our implementation or have a useful extension.  The best way to do this is via a pull request.
+Please let us know if you spot any errors in our implementation or
+have a useful extension.  The best way to do this is via a pull
+request.
 
 ## License
 
 The **cesium-vr** plugin code is released under Apache 2.0 (see LICENSE.md).
 
-This software will need to go and acquire third party software in order to work properly; and NICTA is not suggesting that downloading and using the third party software is necessarily compliant with, or compatible with the Apache 2.0 license; and use of the third party software is entirely at the discretion (and risk) of the licensee.
+This software will need you to go and acquire third party software in
+order to work properly; and NICTA is not suggesting that downloading
+and using the third party software is necessarily compliant with, or
+compatible with the Apache 2.0 license; and use of the third party
+software is entirely at the discretion (and risk) of the licensee.
