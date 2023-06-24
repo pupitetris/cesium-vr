@@ -1,3 +1,5 @@
+import * as Cesium from './cesium/Cesium.js';
+
 var CesiumVR = (function() {
   "use strict";
 
@@ -333,7 +335,7 @@ var CesiumVR = (function() {
     var cameraRotationMatrix = CesiumVR.getCameraRotationMatrix(camera);
 
     // Apply the heading offset to camera
-    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
+//    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
 
     // Apply VR rotation to offset camera rotation matrix
     var newRotation = Cesium.Matrix3.multiply(vrRotationMatrix, cameraRotationMatrix, new Cesium.Matrix3());

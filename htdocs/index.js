@@ -1,65 +1,65 @@
-import {WebXRButton} from './lib/webxr/util/webxr-button.js';
-import {Scene} from './lib/webxr/render/scenes/scene.js';
-import {Renderer, createWebGLContext} from './lib/webxr/render/core/renderer.js';
-import {QueryArgs} from './lib/webxr/util/query-args.js';
+import {WebXRButton} from './lib/webxr-samples/util/webxr-button.js';
+import {QueryArgs} from './lib/webxr-samples/util/query-args.js';
 
-import * as THREE from './lib/three/three.module.js';
-import {CanvasCopy} from './src/CanvasCopy.js';
-import {CesiumVR} from './src/CesiumVR.js'
-import {CesiumVRUtil} from './src/CesiumVRUtil.js';
 import {bingKey, cesiumKey} from './var.js';
 
-// If requested, use the polyfill to provide support for mobile devices
+import * as Cesium from './src/cesium/Cesium.js';
+import * as THREE from './lib/three/three.module.js';
+import {CesiumVR} from './src/CesiumVR.js'
+
+var LOFI_ENABLED = false;
+var IMAGERY_URL = 'lib/cesium/Source/Assets/Textures/';
+
+// If needed, use the polyfill to provide support for mobile devices
 // and devices which only support WebVR.
-import WebXRPolyfill from './lib/webxr/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
-if (QueryArgs.getBool('usePolyfill', true)) {
-    let polyfill = new WebXRPolyfill();
+import WebXRPolyfill from './lib/webxr-samples/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
+
+window.__is_polyfill = false;
+window.__xr = navigator.xr;
+if (__xr == undefined) {
+    console.log('WebXR not detected. Reverting to WebXRPolyfill');
+    __is_polyfill = true;
+    __xr = new WebXRPolyfill();
+    if (!__xr)
+	console.error('WebXRPolyfill failed to initialize');
+} else {
+    if (__xr.constructor.toString().substr(0, 37).indexOf('native') > 0) {
+	console.log('Native WebXR running');
+    } else {
+	console.log('WebXR Emulator Extension detected');
+	__is_polyfill = true;
+    }
 }
-
-var lofi = false;
-var vrEnabled = false;
-var useWebGL = true;
-var useWebVR = true;
-
-var WakeLock = CesiumVRUtil.getWakeLock();
-var wakelock = new WakeLock();
-
-var ellipsoid = Cesium.Ellipsoid.clone(Cesium.Ellipsoid.WGS84);
-var imageryUrl = 'lib/cesium/Source/Assets/Textures/';
+const XR_IS_POLYFILL = __is_polyfill; delete window.__is_polyfill;
+const XR = __xr; delete window.__xr;
 
 // XR globals.
 let xrButton = null;
 let xrRefSpace = null;
+let cVR = null;
 
 // WebGL scene globals.
 let gl = null;
-let renderer = null;
-let scene = new Scene();
-// scene.enableStats(false);
+
 let cesiumScene = null;
 let cesiumCamera = null;
 
-let setup = false;
-
-let cVR = null;
-
 function createImageryProvider() {
-    if (lofi) {
+    if (LOFI_ENABLED) {
 	return new Cesium.TileMapServiceImageryProvider({
-	    url : imageryUrl + 'NaturalEarthII'
+	    url : IMAGERY_URL + 'NaturalEarthII'
 	});
     } else {
 	return new Cesium.BingMapsImageryProvider({
 	    url : '//dev.virtualearth.net',
 	    mapStyle : Cesium.BingMapsStyle.AERIAL,
-	    key: bingKey,
-	    // mapStyle : Cesium.BingMapsStyle.AERIAL_WITH_LABELS
+	    key: bingKey, // from vars.js
 	});
     }
 }
 
 function createTerrainProvider() {
-    if (lofi) {
+    if (LOFI_ENABLED) {
 	return new Cesium.EllipsoidTerrainProvider();
     } else {
 	return Cesium.createWorldTerrain();
@@ -67,81 +67,73 @@ function createTerrainProvider() {
 }
 
 function createScene(canvas) {
-    Cesium.Ion.defaultAccessToken = cesiumKey;
+    Cesium.Ion.defaultAccessToken = cesiumKey; // from vars.js
     var scene = new Cesium.Scene(
 	{
-	    canvas : canvas,
+	    canvas: canvas,
 	    contextOptions: {
+		// https://registry.khronos.org/webgl/specs/latest/1.0/index.html#WEBGLCONTEXTATTRIBUTES
 		webgl: {
-		    xrCompatible : true, 
-		    alpha: true,
-		    preserveDrawingBuffer : true,
-		}
+		    alpha: false, // we are not compositing the canvas
+		    stencil: true, // check
+		    depth: true, // check
+		    xrCompatible: true,
+		    antialias: false, // false: perf boost, no resolve/copy step. We need this to bitblit directly into the device FB. need more investigation.
+		    preserveDrawingBuffer: false, // true: buffer copying, and flush (very bad). false: buffer swapping, fast.
+		    powerPreference: 'high-performance', // 'default': browser chooses (lately, goes to low-power), 'low-power', 'high-performance'
+		    //desynchronized: false, // true: introduces artifacts, but lower latency. check
+		},
+		requestWebgl2: true, // Cesium gracefully downgrades to WebGL1 if WebGL2 is not available.
+		allowTextureFilterAnisotropic: true, // false: performance improvement
 	    },
-	    scene3DOnly : true,
-	    // requestRenderMode: true,
+	    creditContainer: document.createElement('div'), // Must set in order to use an off-screen canvas
+	    creditViewport: document.createElement('div'), // Must set in order to use an off-screen canvas
+	    scene3DOnly: true,
+	    requestRenderMode: false,
+	    //maximumRenderTimeChange: Infinity, // Never render due to a timeout. Useful?
+	    //timeChangeEnabled: false, // where did I see this? Maybe docs for a recent version.
 	}
     );
 
-    scene.useWebGL = useWebGL;
-    scene.useWebVR = useWebVR;
-
-    // // Clone the frustum properties into our patched frustum object...
-    // var patchedFrustum = scene.camera.frustum.clone(new PerspectiveFrustumPatch());
-    // // Patch the camera frustum prototype...
-    // scene.camera.frustum = patchedFrustum;
-
-    var primitives = scene.primitives;
-
-    var cb = new Cesium.Globe(ellipsoid);
-    cb.imageryLayers.addImageryProvider(createImageryProvider());
-    cb.terrainProvider = createTerrainProvider();
-
-    scene.globe = cb;
-
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-	return false;
-    };
+    scene.useWebVR = true;
+    //scene.focalLength = 5.0;
+    //scene.eyeSeparation = camera.frustum.near * 5.0 / 30.0;
+    
+    var ellipsoid = Cesium.Ellipsoid.clone(Cesium.Ellipsoid.WGS84);
+    var globe = new Cesium.Globe(ellipsoid);
+    globe.imageryLayers.addImageryProvider(createImageryProvider());
+    globe.terrainProvider = createTerrainProvider();
+    scene.globe = globe;
 
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
 
-    var skyBoxBaseUrl = imageryUrl + 'SkyBox/tycho2t3_80';
+    var skyBoxBaseUrl = IMAGERY_URL + 'SkyBox/tycho2t3_80';
     scene.skyBox = new Cesium.SkyBox({
-	positiveX : skyBoxBaseUrl + '_px.jpg',
-	negativeX : skyBoxBaseUrl + '_mx.jpg',
-	positiveY : skyBoxBaseUrl + '_py.jpg',
-	negativeY : skyBoxBaseUrl + '_my.jpg',
-	positiveZ : skyBoxBaseUrl + '_pz.jpg',
-	negativeZ : skyBoxBaseUrl + '_mz.jpg'
+	positiveX: skyBoxBaseUrl + '_px.jpg',
+	negativeX: skyBoxBaseUrl + '_mx.jpg',
+	positiveY: skyBoxBaseUrl + '_py.jpg',
+	negativeY: skyBoxBaseUrl + '_my.jpg',
+	positiveZ: skyBoxBaseUrl + '_pz.jpg',
+	negativeZ: skyBoxBaseUrl + '_mz.jpg'
     });
-
-    // var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 500));
-    // var model = Cesium.Model.fromGltf({
-    //   url : 'lib/models/CesiumAir/Cesium_Air.gltf',
-    //   modelMatrix : modelMatrix,
-    //   scale : 20.0,
-    //   minimumPixelSize : 50,
-    // });
-    // scene.primitives.add(model);
 
     return scene;
 }
 
-var getCameraParams = function(camera) {
+function getCameraParams(camera) {
     return {
-	"position" : camera.position,
-	"right" : camera.right,
-	"up" : camera.up,
-	"direction" : camera.direction
+	position: camera.position,
+	right: camera.right,
+	up: camera.up,
+	direction: camera.direction
     };
 };
 
-var setCameraParams = function(_, camera) {
-    camera.position = _.position;
-    camera.right = _.right;
-    camera.up = _.up;
-    camera.direction = _.direction;
+function setCameraParams(params, camera) {
+    camera.position = params.position;
+    camera.right = params.right;
+    camera.up = params.up;
+    camera.direction = params.direction;
 };
 
 // Checks to see if WebXR is available and, if so, queries a list of
@@ -157,10 +149,11 @@ function initXR() {
     document.querySelector('#button-container').appendChild(xrButton.domElement);
 
     // Is WebXR available on this UA?
-    if (navigator.xr) {
+    if (XR) {
 	// If the device allows creation of exclusive sessions set it as the
 	// target of the 'Enter XR' button.
-	navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+	XR.isSessionSupported('immersive-vr').then((supported) => {
+	    console.log('immersive-vr supported');
 	    xrButton.enabled = supported;
 	});
     }
@@ -169,7 +162,7 @@ function initXR() {
 // Called when the user selects a device to present to. In response we
 // will request an exclusive session from that device.
 function onRequestSession() {
-    return navigator.xr.requestSession('immersive-vr').then(onSessionStarted);
+    return XR.requestSession('immersive-vr').then(onSessionStarted);
 }
 
 // Called when we've successfully acquired a XRSession. In response we
@@ -183,10 +176,29 @@ function onSessionStarted(session) {
     // or UA ends the session for any reason.
     session.addEventListener('end', onSessionEnded);
 
-    updateRenderer(session, false);
-    // setupScene(session);
+    if (cesiumScene === null) {
+	let canvas;
+	if (XR_IS_POLYFILL)
+	    canvas = document.createElement('canvas');
+	else
+	    canvas = new OffscreenCanvas(320, 180); // Arbitrary initial resolution
+
+	cesiumScene = createScene(canvas);
+	cesiumScene.xr = {
+	    isPolyfill: XR_IS_POLYFILL
+	};
+    }
 
     cVR = new CesiumVR(100, session);
+
+    // Create a WebGL context to render with, initialized to be compatible
+    // with the XRDisplay we're presenting to.
+    gl = cesiumScene.context._gl;
+
+    // Use the new WebGL context to create a XRWebGLLayer and set it as the
+    // sessions baseLayer. This allows any content rendered to the layer to
+    // be displayed on the XRDevice.
+    session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl)});
 
     // Get a frame of reference, which is required for querying poses. In
     // this case an 'local' frame of reference means that all poses will
@@ -194,54 +206,11 @@ function onSessionStarted(session) {
     session.requestReferenceSpace('local').then((refSpace) => {
 	xrRefSpace = refSpace;
 
+	cesiumScene.xr.refSpace = refSpace;
+
 	// Inform the session that we're ready to begin drawing.
-	session.requestAnimationFrame(onXRFrame);
+	session.requestAnimationFrame(onXRFrameFirst);
     });
-}
-
-function setupScene(session) {
-
-}
-
-function updateRenderer(session, is_cesium, context) {
-    // Create a WebGL context to render with, initialized to be compatible
-    // with the XRDisplay we're presenting to.
-    
-    // ###### CESIUM ######  
-    if (cesiumScene === null) {
-	// var canvas = document.querySelector("canvas");
-	var canvas = document.createElement('canvas');
-	document.querySelector("#container").appendChild(canvas);
-	cesiumScene = createScene(canvas);
-	cesiumCamera = cesiumScene.camera;
-	cesiumCamera.flyTo({
-	    destination : Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600),  // Timp
-	    // destination : Cesium.Cartesian3.fromDegrees(-103.457939, 43.878265, 1650),  // Mt Rushmore
-	    // destination : Cesium.Cartesian3.fromDegrees(123.042885, 10.425316, 500),  // Mt Rushmore
-	    orientation : {
-		heading : Cesium.Math.toRadians(175.0),
-		pitch : Cesium.Math.toRadians(0.0),
-		roll : 0.0
-	    }
-	});
-	cesiumScene.initializeFrame();
-	cesiumScene.render();
-    }
-
-    gl = cesiumScene.context._gl;
-    // Create a renderer with that GL context (this is just for the samples
-    // framework and has nothing to do with WebXR specifically.)
-    // renderer = new Renderer(gl);
-    renderer = new Renderer(gl);
-
-    // Set the scene's renderer, which creates the necessary GPU resources.
-    scene.setRenderer(renderer);
-
-    // Use the new WebGL context to create a XRWebGLLayer and set it as the
-    // sessions baseLayer. This allows any content rendered to the layer to
-    // be displayed on the XRDevice.
-    session.updateRenderState({ baseLayer: new XRWebGLLayer(session, cesiumScene.context._originalGLContext) });
-    var i = 0;
 }
 
 // Called when the user clicks the 'Exit XR' button. In response we end
@@ -256,11 +225,35 @@ function onEndSession(session) {
 // At this point the session object is no longer usable and should be
 // discarded.
 function onSessionEnded(event) {
+    cesiumScene = null;
     xrButton.setSession(null);
+}
 
-    // // In this simple case discard the WebGL context too, since we're not
-    // // rendering anything else to the screen with it.
-    // renderer = null;
+// On the first frame is the first time the geometry of the frame buffer is known.
+// We stop here to set that geometry on our off-screen canvas and then tell 
+// Cesium to process a frame so it resizes accordingly.
+function onXRFrameFirst(t, frame) {
+    let session = frame.session;
+    let glLayer = session.renderState.baseLayer;
+
+    cesiumScene.canvas.width = glLayer.framebufferWidth;
+    cesiumScene.canvas.height = glLayer.framebufferHeight;
+
+    cesiumCamera = cesiumScene.camera;
+    cesiumCamera.setView({
+	destination: Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600),  // Timp
+	// destination: Cesium.Cartesian3.fromDegrees(-103.457939, 43.878265, 1650),  // Mt Rushmore
+	// destination: Cesium.Cartesian3.fromDegrees(123.042885, 10.425316, 500),  // Mt Rushmore
+	orientation: {
+	    heading: Cesium.Math.toRadians(175.0),
+	    pitch: Cesium.Math.toRadians(0.0),
+	    roll: 0.0
+	}
+    });
+
+    cesiumScene.render();
+
+    session.requestAnimationFrame(onXRFrame);
 }
 
 // Called every time the XRSession requests that a new frame be drawn.
@@ -268,86 +261,37 @@ function onXRFrame(t, frame) {
     let session = frame.session;
 
     // Per-frame scene setup. Nothing WebXR specific here.
-    // scene.startFrame();
-    // var cesiumScene = createScene(canvasL);
-    // var foo = cesiumScene.request
+    cesiumScene.xr.frame = frame;
+    cesiumScene.initializeFrame();
 
     // Inform the session that we're ready for the next frame.
     session.requestAnimationFrame(onXRFrame);
 
-    // Get the XRDevice pose relative to the Frame of Reference we created
-    // earlier.
-    let pose = frame.getViewerPose(xrRefSpace);
-
-    // Getting the pose may fail if, for example, tracking is lost. So we
-    // have to check to make sure that we got a valid pose before attempting
-    // to render with it. If not in this case we'll just leave the
-    // framebuffer cleared, so tracking loss means the scene will simply
-    // disappear.
-    if (pose) {
-	let glLayer = session.renderState.baseLayer;
-
-	// If we do have a valid pose, bind the WebGL layer's framebuffer,
-	// which is where any content to be displayed on the XRDevice must be
-	// rendered.
-	gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-
-	// Clear the framebuffer
-	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-	// Loop through each of the views reported by the frame and draw them
-	// into the corresponding viewport.
-	for (let view of pose.views) {
-	    let viewport = glLayer.getViewport(view);
-	    gl.viewport(viewport.x, viewport.y,
-			viewport.width, viewport.height);
-
-	    for (let source of session.inputSources) {
-		if (source.gamepad && source.handedness == 'right') {
-		    // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
-		    var axes = source.gamepad.axes;
-		    var new_position = Cesium.Cartesian3.fromRadians(
-			cesiumCamera.positionCartographic.longitude + (axes[2] * 0.0001)*-1,
-			cesiumCamera.positionCartographic.latitude + (axes[3] * 0.0001),
-			cesiumCamera.positionCartographic.height
-		    );
-		    //var new_position =  Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600)
-		    cesiumCamera.position = new_position;
-		}
-	    }
-	    cesiumScene.initializeFrame();
-            
-	    var orignalCesiumCam = Cesium.Camera.clone(cesiumCamera);
-	    cVR.deriveRecommendedParameters(pose);
-	    cVR.applyVRRotation(cesiumCamera, pose);
-	    cesiumScene.render();
-	    cVR.configureSlaveCamera(orignalCesiumCam, cesiumCamera);
-
-	    // Draw this view of the scene. What happens in this function really
-	    // isn't all that important. What is important is that it renders
-	    // into the XRWebGLLayer's framebuffer, using the viewport into that
-	    // framebuffer reported by the current view, and using the
-	    // projection matrix and view transform from the current view.
-	    // We bound the framebuffer and viewport up above, and are passing
-	    // in the appropriate matrices here to be used when rendering.
-	    //scene.draw(view.projectionMatrix, view.transform);
+    // Per-frame scene setup. Nothing WebXR specific here.
+    var new_position = null;
+    for (let source of session.inputSources) {
+	if (source.gamepad && source.handedness == 'right') {
+	    // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
+	    var axes = source.gamepad.axes;
+	    new_position = Cesium.Cartesian3.fromRadians(
+		cesiumCamera.positionCartographic.longitude + (axes[2] * 0.0001)*-1,
+		cesiumCamera.positionCartographic.latitude + (axes[3] * 0.0001),
+		cesiumCamera.positionCartographic.height
+	    );
 	}
-    } else {
-	// There's several options for handling cases where no pose is given.
-	// The simplest, which these samples opt for, is to simply not draw
-	// anything. That way the device will continue to show the last frame
-	// drawn, possibly even with reprojection. Alternately you could
-	// re-draw the scene again with the last known good pose (which is now
-	// likely to be wrong), clear to black, or draw a head-locked message
-	// for the user indicating that they should try to get back to an area
-	// with better tracking. In all cases it's possible that the device
-	// may override what is drawn here to show the user it's own error
-	// message, so it should not be anything critical to the application's
-	// use.
     }
 
-    // Per-frame scene teardown. Nothing WebXR specific here.
-    scene.endFrame();
+    let pose = frame.getViewerPose(xrRefSpace);
+    if (pose) {
+	var camView = { orientation: { heading: 0, pitch: 0, roll: 0 } };
+	if (new_position)
+	    camView.destination = new_position;
+	cesiumCamera.setView(camView);
+	cVR.applyVRRotation(cesiumCamera, pose);
+	cesiumScene.render();
+    } else {
+	cesiumCamera.position = new_position;
+    }
 }
 
 initXR();
