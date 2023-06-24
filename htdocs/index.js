@@ -3,8 +3,7 @@ import {QueryArgs} from './lib/webxr-samples/util/query-args.js';
 
 import {bingKey, cesiumKey} from './var.js';
 
-import * as Cesium from './src/cesium/Cesium.js';
-import * as THREE from './lib/three/three.module.js';
+import * as Cesium from './lib/cesium/Build/Cesium/Cesium.js';
 import {CesiumVR} from './src/CesiumVR.js'
 
 var LOFI_ENABLED = false;
