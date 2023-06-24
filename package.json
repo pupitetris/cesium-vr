@@ -20,11 +20,10 @@
   },
   "homepage": "https://github.com/pupitetris/cesium-vr#readme",
   "dependencies": {
-    "cesium": "^1.106.1",
     "express": "^4.18.2",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^1.14.9"
   }
 }
