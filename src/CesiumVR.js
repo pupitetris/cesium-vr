@@ -1,4 +1,4 @@
-import * as Cesium from './cesium/Cesium.js';
+import * as Cesium from "CesiumJS";
 
 var CesiumVR = (function() {
   "use strict";
@@ -412,4 +412,4 @@ var CesiumVR = (function() {
 
 }());
 
-export {CesiumVR};
+export default CesiumVR;
