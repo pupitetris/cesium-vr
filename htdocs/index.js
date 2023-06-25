@@ -96,6 +96,10 @@ async function createScene(canvas) {
     scene.useWebVR = true;
     //scene.focalLength = 5.0;
     //scene.eyeSeparation = camera.frustum.near * 5.0 / 30.0;
+
+    const fog = new Cesium.Fog();
+    fog.density = 0.0003;
+    scene.fog = fog;
     
     var ellipsoid = Cesium.Ellipsoid.clone(Cesium.Ellipsoid.WGS84);
     var globe = new Cesium.Globe(ellipsoid);
