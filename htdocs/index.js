@@ -1,13 +1,13 @@
-import {WebXRButton} from './lib/webxr-samples/util/webxr-button.js';
-import {QueryArgs} from './lib/webxr-samples/util/query-args.js';
+import {WebXRButton} from "WebXR-Button";
 
-import {bingKey, cesiumKey} from './var.js';
+import VAR from './var.js';
+window.CESIUM_BASE_URL = './lib/cesium/Build/CesiumUnminified';
 
-import * as Cesium from './lib/cesium/Build/Cesium/Cesium.js';
-import {CesiumVR} from './src/CesiumVR.js'
+import * as Cesium from "CesiumJS";
+import CesiumVR from './src/CesiumVR.js'
 
-var LOFI_ENABLED = false;
-var IMAGERY_URL = 'lib/cesium/Source/Assets/Textures/';
+const LOFI_ENABLED = false;
+const IMAGERY_URL = 'lib/cesium/Source/Assets/Textures/';
 
 // If needed, use the polyfill to provide support for mobile devices
 // and devices which only support WebVR.
@@ -43,30 +43,29 @@ let gl = null;
 let cesiumScene = null;
 let cesiumCamera = null;
 
-function createImageryProvider() {
+async function createImageryProvider() {
     if (LOFI_ENABLED) {
-	return new Cesium.TileMapServiceImageryProvider({
-	    url : IMAGERY_URL + 'NaturalEarthII'
-	});
+	return await Cesium.TileMapServiceImageryProvider.fromUrl(IMAGERY_URL + 'NaturalEarthII');
     } else {
-	return new Cesium.BingMapsImageryProvider({
-	    url : '//dev.virtualearth.net',
-	    mapStyle : Cesium.BingMapsStyle.AERIAL,
-	    key: bingKey, // from vars.js
-	});
+	return await Cesium.BingMapsImageryProvider.fromUrl(
+	    'https://dev.virtualearth.net', {
+		key: VAR.bingKey,
+		mapStyle : Cesium.BingMapsStyle.AERIAL,
+	    }
+	);
     }
 }
 
-function createTerrainProvider() {
+async function createTerrainProvider() {
     if (LOFI_ENABLED) {
 	return new Cesium.EllipsoidTerrainProvider();
     } else {
-	return Cesium.createWorldTerrain();
+	return await Cesium.createWorldTerrainAsync();
     }
 }
 
-function createScene(canvas) {
-    Cesium.Ion.defaultAccessToken = cesiumKey; // from vars.js
+async function createScene(canvas) {
+    Cesium.Ion.defaultAccessToken = VAR.cesiumKey;
     var scene = new Cesium.Scene(
 	{
 	    canvas: canvas,
@@ -90,7 +89,7 @@ function createScene(canvas) {
 	    scene3DOnly: true,
 	    requestRenderMode: false,
 	    //maximumRenderTimeChange: Infinity, // Never render due to a timeout. Useful?
-	    //timeChangeEnabled: false, // where did I see this? Maybe docs for a recent version.
+ 	    //timeChangeEnabled: false, // where did I see this? Maybe docs for a recent version.
 	}
     );
 
@@ -100,8 +99,8 @@ function createScene(canvas) {
     
     var ellipsoid = Cesium.Ellipsoid.clone(Cesium.Ellipsoid.WGS84);
     var globe = new Cesium.Globe(ellipsoid);
-    globe.imageryLayers.addImageryProvider(createImageryProvider());
-    globe.terrainProvider = createTerrainProvider();
+    globe.imageryLayers.addImageryProvider(await createImageryProvider());
+    globe.terrainProvider = await createTerrainProvider();
     scene.globe = globe;
 
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
@@ -118,22 +117,6 @@ function createScene(canvas) {
 
     return scene;
 }
-
-function getCameraParams(camera) {
-    return {
-	position: camera.position,
-	right: camera.right,
-	up: camera.up,
-	direction: camera.direction
-    };
-};
-
-function setCameraParams(params, camera) {
-    camera.position = params.position;
-    camera.right = params.right;
-    camera.up = params.up;
-    camera.direction = params.direction;
-};
 
 // Checks to see if WebXR is available and, if so, queries a list of
 // XRDevices that are connected to the system.
@@ -182,12 +165,18 @@ function onSessionStarted(session) {
 	else
 	    canvas = new OffscreenCanvas(320, 180); // Arbitrary initial resolution
 
-	cesiumScene = createScene(canvas);
-	cesiumScene.xr = {
-	    isPolyfill: XR_IS_POLYFILL
-	};
-    }
+	createScene(canvas).then((scene) => {
+	    cesiumScene = scene;
+	    cesiumScene.xr = {
+		isPolyfill: XR_IS_POLYFILL
+	    };
+	    sessionStartedCont(session)
+	});
+    } else
+	sessionStartedCont(session);
+}
 
+function sessionStartedCont(session) {
     cVR = new CesiumVR(100, session);
 
     // Create a WebGL context to render with, initialized to be compatible
