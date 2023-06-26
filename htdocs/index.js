@@ -94,6 +94,7 @@ async function createScene(canvas) {
     );
 
     scene.useWebVR = true;
+    scene.webXRContext = {};
     //scene.focalLength = 5.0;
     //scene.eyeSeparation = camera.frustum.near * 5.0 / 30.0;
 
@@ -171,9 +172,6 @@ function onSessionStarted(session) {
 
 	createScene(canvas).then((scene) => {
 	    cesiumScene = scene;
-	    cesiumScene.xr = {
-		isPolyfill: XR_IS_POLYFILL
-	    };
 	    sessionStartedCont(session)
 	});
     } else
@@ -198,7 +196,7 @@ function sessionStartedCont(session) {
     session.requestReferenceSpace('local').then((refSpace) => {
 	xrRefSpace = refSpace;
 
-	cesiumScene.xr.refSpace = refSpace;
+	cesiumScene.webXRContext.refSpace = refSpace;
 
 	// Inform the session that we're ready to begin drawing.
 	session.requestAnimationFrame(onXRFrameFirst);
@@ -253,7 +251,7 @@ function onXRFrame(t, frame) {
     let session = frame.session;
 
     // Per-frame scene setup. Nothing WebXR specific here.
-    cesiumScene.xr.frame = frame;
+    cesiumScene.webXRContext.frame = frame;
     cesiumScene.initializeFrame();
 
     // Inform the session that we're ready for the next frame.
