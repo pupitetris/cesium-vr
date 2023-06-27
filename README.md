@@ -15,6 +15,27 @@ cesium-vr comes with a demo that exemplifies how to use cesium-vr:
 The source code of the demo resides in
 [htdocs/index.js](htdocs/index.js)
 
+## Cloning the repo
+
+This repo uses submodules to pull a [modified version of
+CesiumJS](https://github.com/pupitetris/cesium-webxr/tree/webxr-poc). Please
+clone using:
+
+```
+git clone --recurse-submodules git@github.com:pupitetris/cesium-webxr.git
+```
+
+or
+
+```
+git clone git@github.com:pupitetris/cesium-webxr.git
+git submodule init
+git submodule update
+```
+
+Of course you can use `https://github.com/pupitetris/cesium-vr.git`
+instead of `git@github.com:pupitetris/cesium-webxr.git`
+
 ## Usage
 
 Please note that WebXR API specifies the restriction of not being
