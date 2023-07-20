@@ -11,13 +11,13 @@ var CesiumVR = (function() {
   // Given a hmd device and a eye, returns the aspect ratio for that eye
   function getAspectRatio(viewport) {
     // var rect = params.renderRect;
-    if (typeof viewport === 'undefined') {
+    if (typeof viewport === "undefined") {
       // Must be polyfill device. Revert to browser window ratio.
       viewport = window.screen;
     }
     return viewport.width / viewport.height;
   }
-  
+
   // Calculates the required scaling and offsetting of a symmetrical fov given an asymmetrical fov.
   function fovToScaleAndOffset(fov) {
     var fovPort = {
@@ -46,16 +46,16 @@ var CesiumVR = (function() {
    *
    * Provide a value to scale the camera distance for the eyes. This
    * increases/decreases the sense of scale in Cesium.
-   * 
+   *
    * Use 1.0 for a realistic sense of scale and larger values (~10.0-100.0) for
    * a model/diorama feel.
-   * 
+   *
    * @param {Number}   scale        A scalar for the Interpupillary Distance.
    * @param {Function} callback     [description]
    * @param {[type]}   errorHandler [description]
    */
   var CesiumVR = function(scale, session, errorHandler) {
-    this.errorHandler = typeof errorHandler === 'undefined' ? defaultErrorHandler : errorHandler;
+    this.errorHandler = typeof errorHandler === "undefined" ? defaultErrorHandler : errorHandler;
 
     this.errorMsg = "A VR-enabled browser is required for Virtual Reality Mode. Please visit http://mozvr.com/downloads for more details.";
 
@@ -63,7 +63,7 @@ var CesiumVR = (function() {
     this.hmdDevice = undefined;
     this.sensorDevice = undefined;
 
-    // Holds the heading offset to be applied to ensure forward is 
+    // Holds the heading offset to be applied to ensure forward is
     this.headingOffsetMatrix = Cesium.Matrix3.clone(Cesium.Matrix3.IDENTITY, new Cesium.Matrix3());
 
     this.previousDeviceRotation = Cesium.Quaternion.clone(Cesium.Quaternion.IDENTITY, new Cesium.Quaternion());
@@ -112,36 +112,36 @@ var CesiumVR = (function() {
 
     //   // We now have our devices... let's calculate all the required setup information...
     //   if (that.hmdDevice) {
-        // Holds information about the x-axis eye separation in the world.
+    // Holds information about the x-axis eye separation in the world.
 
-        // var leftParams = that.hmdDevice.getEyeParameters('left');
-        // var rightParams = that.hmdDevice.getEyeParameters('right');
+    // var leftParams = that.hmdDevice.getEyeParameters("left");
+    // var rightParams = that.hmdDevice.getEyeParameters("right");
 
-        // that.xEyeTranslation = {
-        //   left  : leftParams.eyeTranslation.x,
-        //   right : rightParams.eyeTranslation.x
-        // };
+    // that.xEyeTranslation = {
+    //   left  : leftParams.eyeTranslation.x,
+    //   right : rightParams.eyeTranslation.x
+    // };
 
-        // // Holds information about the recommended FOV for each eye for the detected device.
-        // that.fovs = {
-        //   left  : leftParams.recommendedFieldOfView,
-        //   right : rightParams.recommendedFieldOfView
-        // };
+    // // Holds information about the recommended FOV for each eye for the detected device.
+    // that.fovs = {
+    //   left  : leftParams.recommendedFieldOfView,
+    //   right : rightParams.recommendedFieldOfView
+    // };
 
-        // // Holds the aspect ratio information about each eye
-        // that.fovAspectRatio = {
-        //   left  : getAspectRatio(leftParams),
-        //   right : getAspectRatio(rightParams)
-        // };
+    // // Holds the aspect ratio information about each eye
+    // that.fovAspectRatio = {
+    //   left  : getAspectRatio(leftParams),
+    //   right : getAspectRatio(rightParams)
+    // };
 
-        // // Holds the fov scaling and offset information for each eye.
-        // that.fovScaleAndOffset = {
-        //   left  : fovToScaleAndOffset(that.fovs.left),
-        //   right : fovToScaleAndOffset(that.fovs.right)
-        // };
-      // }
+    // // Holds the fov scaling and offset information for each eye.
+    // that.fovScaleAndOffset = {
+    //   left  : fovToScaleAndOffset(that.fovs.left),
+    //   right : fovToScaleAndOffset(that.fovs.right)
+    // };
+    // }
 
-    //   if (typeof callback !== 'undefined') {
+    //   if (typeof callback !== "undefined") {
     //     callback();
     //   }
     // }
@@ -175,8 +175,8 @@ var CesiumVR = (function() {
   };
 
   CesiumVR.prototype.deriveRecommendedParameters = function(pose) {
-    var leftView = getView(pose, 'left');
-    var rightView = getView(pose, 'right');
+    var leftView = getView(pose, "left");
+    var rightView = getView(pose, "right");
 
     var glView = this.session.renderState.baseLayer;
     var leftParams = glView.getViewport(leftView);
@@ -191,14 +191,14 @@ var CesiumVR = (function() {
     let upDown = 106;
     let leftRight = 94;
     let fov = {
-      upDegrees: upDown / 2, 
-      downDegrees: upDown / 2, 
+      upDegrees: upDown / 2,
+      downDegrees: upDown / 2,
       leftDegrees: leftRight / 2,
-      rightDegrees: leftRight / 2, 
-      zNear: 0.1, 
+      rightDegrees: leftRight / 2,
+      zNear: 0.1,
       zFar: 10000
     };
-    
+
     this.fovs = {
       left  : fov,
       right : fov
@@ -223,14 +223,19 @@ var CesiumVR = (function() {
    * @return {Cesium.Quaternion}
    */
   CesiumVR.prototype.getRotation = function(pose) {
-    return toQuat(getView(pose, 'left').transform.orientation);
+    //    return toQuat(getView(pose, "left").transform.orientation);
+    return toQuat(pose.transform.orientation);
+  };
+
+  CesiumVR.prototype.getRotationInv = function(pose) {
+	  return toQuat(pose.transform.inverse.orientation);
   };
 
   /**
    * Returns the position of the HMD as a quaternion.
    *
    * NOTE: Currently not used.
-   * 
+   *
    * @return {Cesium.Quaternion}
    */
   CesiumVR.prototype.getPosition = function() {
@@ -244,9 +249,9 @@ var CesiumVR = (function() {
    * It will ensure all the appropriate FOV and aspect ratio settings are
    * applied depending on the current VR equipment discovered.
    *
-   * If the eye parameter is not either 'right' or 'left', it will simply clone
+   * If the eye parameter is not either "right" or "left", it will simply clone
    * the master camera into the slave camera.
-   * 
+   *
    * @param  {Cesium.Camera} master The reference camera
    * @param  {Cesium.Camera} slave  The camera to be modified
    * @param  {String}        eye    The eye specifier
@@ -267,7 +272,7 @@ var CesiumVR = (function() {
     slave.frustum.xOffset = 0.0;
     slave.frustum.yOffset = 0.0;
 
-    if (eye === 'right' || eye === 'left') {
+    if (eye === "right" || eye === "left") {
       // Get the correct eye translation.
       translation = this.xEyeTranslation[eye] * this.IPDScale;
 
@@ -293,7 +298,7 @@ var CesiumVR = (function() {
 
   /**
    * Given a rotation matrix and a camera, it sets the cameras rotation to the rotation matrix.
-   * 
+   *
    * @param {Cesium.Matrix3} rotation  the rotation matrix
    * @param {Cesium.Camera}  camera    the camera to be rotated
    */
@@ -305,7 +310,7 @@ var CesiumVR = (function() {
 
   /**
    * Grab the camera orientation from component vectors into a 3x3 Matrix.
-   * 
+   *
    * @param  {Cesium.Camera}  camera  The target camera
    * @return {Cesium.Matrix3}         The rotation matrix of the target camera
    */
@@ -321,11 +326,11 @@ var CesiumVR = (function() {
    * Given a camera and a rotation quaternion, apply the rotation to the camera.
    *
    * This assumes the incoming camera has no previous VR rotation applied.
-   * 
+   *
    * @param  {Cesium.Camera}     camera           The camera to rotate
    */
   CesiumVR.prototype.applyVRRotation = function(camera, pose) {
-    var vrRotationMatrix = Cesium.Matrix3.fromQuaternion(Cesium.Quaternion.inverse(this.getRotation(pose), new Cesium.Quaternion()));
+    var vrRotationMatrix = Cesium.Matrix3.fromQuaternion(this.getRotationInv(pose));
 
     // Translate camera back to origin
     var pos = camera.position;
@@ -335,7 +340,7 @@ var CesiumVR = (function() {
     var cameraRotationMatrix = CesiumVR.getCameraRotationMatrix(camera);
 
     // Apply the heading offset to camera
-//    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
+    //    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
 
     // Apply VR rotation to offset camera rotation matrix
     var newRotation = Cesium.Matrix3.multiply(vrRotationMatrix, cameraRotationMatrix, new Cesium.Matrix3());
@@ -350,7 +355,7 @@ var CesiumVR = (function() {
   /**
    * Orient the camera with the up vector away from the center of the globe,
    * i.e. set the up vector to the same direction as the position vector.
-   * 
+   *
    * @param  {Cesium.Camera} camera   The camera to normalise.
    */
   CesiumVR.prototype.levelCamera = function(camera) {
@@ -383,7 +388,7 @@ var CesiumVR = (function() {
   /**
    * Given a container HTML element (e.g. div or canvas), this will go
    * fullscreen into VR mode.
-   * 
+   *
    * @param  {HTML element} container
    */
   CesiumVR.prototype.goFullscreenVR = function(container) {
