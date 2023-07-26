@@ -83,11 +83,11 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
     running, you can use that to issue the `adb reverse` command
     and skip the manual adb setup.
   - From a terminal in the host, run `adb devices`
-    - Meta Quest: if your device does not appear, check your Meta
-      account status and make sure that it is configured as a
-      Developer's account and verified.  ToS changes may invalidate your
-      account and the Quest will drop developer mode until the situation
-      is fixed.
+    - Meta Quest: if your device does not appear, [check your Meta
+      account status](https://developer.oculus.com/manage/) and make
+      sure that it is configured as a Developer's account and
+      verified.  ToS changes may invalidate your account and the Quest
+      will drop developer mode until the situation is fixed.
     - Linux: If adb complaints about udev rules, you may need to create (as
       `root`) the file `/lib/udev/rules.d/52-hmd.rules` with the content:
 
