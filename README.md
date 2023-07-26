@@ -53,7 +53,7 @@ For Valve Index, HTC Vive Cosmos/Pro, HP Reverb, Varjo, [etc](https://vr-compare
 - Run a [WebXR-enabled browser](https://caniuse.com/webxr).
   - In the case of Firefox, you have to activate the
     `dom.vr.webxr.enabled` flag in `about:config`
-- Check the [WebXR Sample Pages](https://immersive-web.github.io/webxr-samples/) 
+- Check the [WebXR Sample Pages](https://immersive-web.github.io/webxr-samples/)
   to check if your browser is WebXR-ready.
 
   If you have no HMD a good option for development is to install a
@@ -98,7 +98,7 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
       - `idVendor`/`idProduct` may vary, check with `lsusb` and adjust
         accordingly.
       - Then to make the changes effective to the udev subsystem, run:
-  
+
         ```
         sudo udevadm control --reload-rules
         sudo systemctl restart systemd-udevd.service
@@ -108,8 +108,8 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
         check) or whatever permissions your distro requires for you to
         use adb (`plugdev` in Debian allows members to mount USB mass
         storage devices and other removable media).
-      - The upstream authority on this topic seems to be in the 
-        [android-udev-rules github repo](https://github.com/M0Rf30/android-udev-rules). 
+      - The upstream authority on this topic seems to be in the
+        [android-udev-rules github repo](https://github.com/M0Rf30/android-udev-rules).
         In theory you can grab the latest udev rules for Android devices from there and
         install them on your system, but YMMV. Good source to study how to fix this problem.
 
@@ -137,9 +137,9 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
   ln -s ../src src
     http-server
     ```
-  
+
   OR use the included python3 server:
-  
+
   ```
   cd cesium-vr
   python3 server.py
