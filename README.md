@@ -84,11 +84,11 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
       and skip the manual adb setup.
   - From a terminal in the host, run `adb devices`
 	- Linux: If adb complaints about udev rules, you may need to create (as
-      `root`) the file `/lib/udev/rules/52-hmd.rules` with the
+      `root`) the file `/lib/udev/rules.d/52-hmd.rules` with the
       content:
 
 	```
-	SUBSYSTEM=="usb", ATTR{idVendor}=="2833", ATTR{idProduct}=="0186", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
+	SUBSYSTEM=="usb", ATTR{idVendor}=="2833", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
 	```
 
 	- `idVendor`/`idProduct` may vary, check with `lsusb` and adjust
