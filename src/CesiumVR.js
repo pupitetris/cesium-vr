@@ -223,7 +223,6 @@ var CesiumVR = (function() {
    * @return {Cesium.Quaternion}
    */
   CesiumVR.prototype.getRotation = function(pose) {
-    //    return toQuat(getView(pose, "left").transform.orientation);
     return toQuat(pose.transform.orientation);
   };
 
@@ -322,6 +321,8 @@ var CesiumVR = (function() {
     return result;
   };
 
+  const zeroCameraPosition = new Cesium.Cartesian3(0.0, 0.0, 0.0);
+
   /**
    * Given a camera and a rotation quaternion, apply the rotation to the camera.
    *
@@ -333,14 +334,14 @@ var CesiumVR = (function() {
     var vrRotationMatrix = Cesium.Matrix3.fromQuaternion(this.getRotationInv(pose));
 
     // Translate camera back to origin
-    var pos = camera.position;
-    camera.position = new Cesium.Cartesian3(0.0,0.0,0.0);
+    const savedPos = camera.position;
+    camera.position = zeroCameraPosition;
 
     // Get camera rotation matrix
     var cameraRotationMatrix = CesiumVR.getCameraRotationMatrix(camera);
 
     // Apply the heading offset to camera
-    //    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
+    Cesium.Matrix3.multiply(this.headingOffsetMatrix, cameraRotationMatrix, cameraRotationMatrix);
 
     // Apply VR rotation to offset camera rotation matrix
     var newRotation = Cesium.Matrix3.multiply(vrRotationMatrix, cameraRotationMatrix, new Cesium.Matrix3());
@@ -349,7 +350,7 @@ var CesiumVR = (function() {
     CesiumVR.setCameraRotationMatrix(newRotation, camera);
 
     // translate back to position
-    camera.position = pos;
+    camera.position = savedPos;
   };
 
   /**
