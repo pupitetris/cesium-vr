@@ -71,6 +71,7 @@ async function createScene(canvas) {
 	    canvas: canvas,
 	    contextOptions: {
 		    // https://registry.khronos.org/webgl/specs/latest/1.0/index.html#WEBGLCONTEXTATTRIBUTES
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
 		    webgl: {
 		      alpha: false, // we are not compositing the canvas
 		      stencil: true, // check
@@ -94,7 +95,9 @@ async function createScene(canvas) {
   );
 
   scene.useWebVR = true;
+//  scene.useWebXR = false;
   scene.webXRContext = {};
+  scene.rethrowRenderErrors = true;
   //scene.focalLength = 5.0;
   //scene.eyeSeparation = camera.frustum.near * 5.0 / 30.0;
 
@@ -152,57 +155,6 @@ function onRequestSession() {
   return XR.requestSession("immersive-vr").then(onSessionStarted);
 }
 
-// Called when we've successfully acquired a XRSession. In response we
-// will set up the necessary session state and kick off the frame loop.
-function onSessionStarted(session) {
-  // This informs the "Enter XR" button that the session has started and
-  // that it should display "Exit XR" instead.
-  xrButton.setSession(session);
-
-  // Listen for the sessions "end" event so we can respond if the user
-  // or UA ends the session for any reason.
-  session.addEventListener("end", onSessionEnded);
-
-  if (cesiumScene === null) {
-	  let canvas;
-	  if (XR_IS_POLYFILL)
-	    canvas = document.createElement("canvas");
-	  else
-	    canvas = new OffscreenCanvas(320, 180); // Arbitrary initial resolution
-
-	  createScene(canvas).then((scene) => {
-	    cesiumScene = scene;
-	    sessionStartedCont(session)
-	  });
-  } else
-	  sessionStartedCont(session);
-}
-
-function sessionStartedCont(session) {
-  cVR = new CesiumVR(100, session);
-
-  // Create a WebGL context to render with, initialized to be compatible
-  // with the XRDisplay we're presenting to.
-  gl = cesiumScene.context._gl;
-
-  // Use the new WebGL context to create a XRWebGLLayer and set it as the
-  // sessions baseLayer. This allows any content rendered to the layer to
-  // be displayed on the XRDevice.
-  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl)});
-
-  // Get a frame of reference, which is required for querying poses. In
-  // this case an "local" frame of reference means that all poses will
-  // be relative to the location where the XRDevice was first detected.
-  session.requestReferenceSpace("local").then((refSpace) => {
-	  xrRefSpace = refSpace;
-
-	  cesiumScene.webXRContext.refSpace = refSpace;
-
-	  // Inform the session that we're ready to begin drawing.
-	  session.requestAnimationFrame(onXRFrameFirst);
-  });
-}
-
 // Called when the user clicks the "Exit XR" button. In response we end
 // the session.
 function onEndSession(session) {
@@ -219,15 +171,43 @@ function onSessionEnded(event) {
   xrButton.setSession(null);
 }
 
-// On the first frame is the first time the geometry of the frame buffer is known.
-// We stop here to set that geometry on our off-screen canvas and then tell
-// Cesium to process a frame so it resizes accordingly.
-function onXRFrameFirst(t, frame) {
-  let session = frame.session;
-  let glLayer = session.renderState.baseLayer;
+// Called when we've successfully acquired a XRSession. In response we
+// will set up the necessary session state and kick off the frame loop.
+async function onSessionStarted(session) {
+  // This informs the "Enter XR" button that the session has started and
+  // that it should display "Exit XR" instead.
+  xrButton.setSession(session);
 
-  cesiumScene.canvas.width = glLayer.framebufferWidth;
-  cesiumScene.canvas.height = glLayer.framebufferHeight;
+  // Listen for the sessions "end" event so we can respond if the user
+  // or UA ends the session for any reason.
+  session.addEventListener("end", onSessionEnded);
+
+  if (cesiumScene === null) {
+	  let canvas;
+	  if (XR_IS_POLYFILL)
+	    canvas = document.createElement("canvas");
+	  else
+	    canvas = new OffscreenCanvas(320, 180); // Arbitrary initial resolution
+
+	  cesiumScene = await createScene(canvas);
+  }
+
+  cVR = new CesiumVR(100, session);
+
+  // Create a WebGL context to render with, initialized to be compatible
+  // with the XRDisplay we're presenting to.
+  gl = cesiumScene.context._gl;
+
+  // Use the new WebGL context to create a XRWebGLLayer and set it as the
+  // sessions baseLayer. This allows any content rendered to the layer to
+  // be displayed on the XRDevice.
+  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl)});
+
+  // Get a frame of reference, which is required for querying poses. In
+  // this case an "local" frame of reference means that all poses will
+  // be relative to the location where the XRDevice was first detected.
+  xrRefSpace = await session.requestReferenceSpace("local");
+  cesiumScene.webXRContext.refSpace = xrRefSpace;
 
   cesiumCamera = cesiumScene.camera;
   cesiumCamera.setView({
@@ -241,28 +221,35 @@ function onXRFrameFirst(t, frame) {
 	  }
   });
 
-  cesiumScene.render();
-
-  session.requestAnimationFrame(onXRFrame);
+	// Inform the session that we're ready to begin drawing.
+	session.requestAnimationFrame(onXRFrame);
 }
 
-// Called every time the XRSession requests that a new frame be drawn.
+// Called every time the XRSession requests a new frame to be drawn.
 function onXRFrame(t, frame) {
-  let session = frame.session;
+  const session = frame.session;
+
+  // Inform the session that we're ready for the next frame.
+  session.requestAnimationFrame(onXRFrame);
+
+  // Resize the scene's canvas to the framebuffer size in case the size differs.
+  const glLayer = session.renderState.baseLayer;
+  if (cesiumScene.canvas.width != glLayer.framebufferWidth ||
+      cesiumScene.canvas.height != glLayer.framebufferHeight) {
+    cesiumScene.canvas.width = glLayer.framebufferWidth;
+    cesiumScene.canvas.height = glLayer.framebufferHeight;
+    return;
+  }
 
   // Per-frame scene setup. Nothing WebXR specific here.
   cesiumScene.webXRContext.frame = frame;
   cesiumScene.initializeFrame();
 
-  // Inform the session that we're ready for the next frame.
-  session.requestAnimationFrame(onXRFrame);
-
-  // Per-frame scene setup. Nothing WebXR specific here.
-  var new_position = null;
-  for (let source of session.inputSources) {
+  let new_position = null;
+  for (const source of session.inputSources) {
 	  if (source.gamepad && source.handedness == "right") {
 	    // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
-	    var axes = source.gamepad.axes;
+	    const axes = source.gamepad.axes;
 	    new_position = Cesium.Cartesian3.fromRadians(
 		    cesiumCamera.positionCartographic.longitude + (axes[2] * 0.0001)*-1,
 		    cesiumCamera.positionCartographic.latitude + (axes[3] * 0.0001),
@@ -271,9 +258,9 @@ function onXRFrame(t, frame) {
 	  }
   }
 
-  let pose = frame.getViewerPose(xrRefSpace);
+  const pose = frame.getViewerPose(xrRefSpace);
   if (pose) {
-	  var camView = { orientation: { heading: 0, pitch: 0, roll: 0 } };
+	  const camView = { orientation: { heading: 0, pitch: 0, roll: 0 } };
 	  if (new_position)
 	    camView.destination = new_position;
 	  cesiumCamera.setView(camView);
