@@ -79,35 +79,43 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
   - Enable Developer Mode in your headset.
   - Connect to a host PC through USB
   - Install `adb` in the host (Debian Linux: `apt install adb`)
-	- If you have [SideQuest](https://sidequestvr.com/) up and
-      running, you can use that to issue the `adb reverse` command
-      and skip the manual adb setup.
+  - If you have [SideQuest](https://sidequestvr.com/) up and
+    running, you can use that to issue the `adb reverse` command
+    and skip the manual adb setup.
   - From a terminal in the host, run `adb devices`
-	- Linux: If adb complaints about udev rules, you may need to create (as
-      `root`) the file `/lib/udev/rules.d/52-hmd.rules` with the
-      content:
+    - Meta Quest: if your device does not appear, check your Meta
+      account status and make sure that it is configured as a
+      Developer's account and verified.  ToS changes may invalidate your
+      account and the Quest will drop developer mode until the situation
+      is fixed.
+    - Linux: If adb complaints about udev rules, you may need to create (as
+      `root`) the file `/lib/udev/rules.d/52-hmd.rules` with the content:
 
-	```
-	SUBSYSTEM=="usb", ATTR{idVendor}=="2833", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
-	```
+      ```
+      SUBSYSTEM=="usb", ATTR{idVendor}=="2833", MODE="0660", GROUP="plugdev", TAG+="uaccess", SYMLINK+="ocuquest%n", ENV{adb_user}="yes"
+      ```
 
-	- `idVendor`/`idProduct` may vary, check with `lsusb` and adjust
-      accordingly.
-	- Then to make the changes effective to the udev subsystem, run:
-	
-	```
-	sudo udevadm control --reload-rules
-	sudo udevadm trigger	
-	```
-	
-	- Make sure your user belongs to the group `plugdev` (run `id` to
-      check) or whatever permissions your distro requires for you to
-      use adb (`plugdev` in Debian allows members to mount USB mass
-      storage devices and other removable media).
+      - `idVendor`/`idProduct` may vary, check with `lsusb` and adjust
+        accordingly.
+      - Then to make the changes effective to the udev subsystem, run:
+  
+        ```
+        sudo udevadm control --reload-rules
+        sudo systemctl restart systemd-udevd.service
+        ```
+
+      - Make sure your user belongs to the group `plugdev` (run `id` to
+        check) or whatever permissions your distro requires for you to
+        use adb (`plugdev` in Debian allows members to mount USB mass
+        storage devices and other removable media).
+      - The upstream authority on this topic seems to be in the 
+        [android-udev-rules github repo](https://github.com/M0Rf30/android-udev-rules). 
+        In theory you can grab the latest udev rules for Android devices from there and
+        install them on your system, but YMMV. Good source to study how to fix this problem.
 
   - Authorize computer on HMD.
   - Set up reverse forwarding through adb (`adb reverse tcp:8080 tcp:8080`)
-	- This may have to be reissued between sessions.
+  - This may have to be reissued between sessions.
   - Run HMD's web browser
 
 - **Option 2**: Run the http server with https (ssl) enabled.
@@ -124,18 +132,18 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
   node.js http-server
 
     ```
-	sudo apt install node-http-server
+  sudo apt install node-http-server
     cd cesium-vr/htdocs
-	ln -s ../src src
+  ln -s ../src src
     http-server
     ```
-	
-	OR use the included python3 server:
-	
-	```
-	cd cesium-vr
-	python3 server.py
-	```
+  
+  OR use the included python3 server:
+  
+  ```
+  cd cesium-vr
+  python3 server.py
+  ```
 
 - Using your browser, visit `http://localhost:8080/` (or `https://localhost:4443/`).
 
