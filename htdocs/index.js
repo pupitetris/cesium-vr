@@ -211,15 +211,17 @@ async function onSessionStarted(session) {
 
   cesiumCamera = cesiumScene.camera;
   cesiumCamera.setView({
-	  destination: Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600),  // Timp
+	  destination: Cesium.Cartesian3.fromDegrees(-100.1152739, 19.1835769, 2250),  // Valle de Bravo
+//	   destination: Cesium.Cartesian3.fromDegrees(-111.645898, 40.390810, 3600),  // Timp
 	  // destination: Cesium.Cartesian3.fromDegrees(-103.457939, 43.878265, 1650),  // Mt Rushmore
 	  // destination: Cesium.Cartesian3.fromDegrees(123.042885, 10.425316, 500),  // Mt Rushmore
 	  orientation: {
-	    heading: Cesium.Math.toRadians(175.0),
+	    heading: Cesium.Math.toRadians(90.0),
 	    pitch: Cesium.Math.toRadians(0.0),
 	    roll: 0.0
 	  }
   });
+//  cesiumCamera.frustum.far = 40000;
 
 	// Inform the session that we're ready to begin drawing.
 	session.requestAnimationFrame(onXRFrame);
@@ -245,26 +247,30 @@ function onXRFrame(t, frame) {
   cesiumScene.webXRContext.frame = frame;
   cesiumScene.initializeFrame();
 
-  let new_position = null;
-  for (const source of session.inputSources) {
-	  if (source.gamepad && source.handedness == "right") {
-	    // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
-	    const axes = source.gamepad.axes;
-	    new_position = Cesium.Cartesian3.fromRadians(
-		    cesiumCamera.positionCartographic.longitude + (axes[2] * 0.0001)*-1,
-		    cesiumCamera.positionCartographic.latitude + (axes[3] * 0.0001),
-		    cesiumCamera.positionCartographic.height
-	    );
-	  }
-  }
-
   const pose = frame.getViewerPose(xrRefSpace);
   if (pose) {
-	  const camView = { orientation: { heading: 0, pitch: 0, roll: 0 } };
-	  if (new_position)
-	    camView.destination = new_position;
-	  cesiumCamera.setView(camView);
+	  cesiumCamera.setView({ orientation: { heading: 0, pitch: 0, roll: 0 } });
 	  cVR.applyVRRotation(cesiumCamera, pose);
+    for (const source of session.inputSources) {
+	    if (source.gamepad/* && source.handedness == "right"*/) {
+        const gamepad = source.gamepad;
+	      // let gamepad_pose = frame.getPose(source.gripSpace, xrRefSpace);
+        //gamepad.buttons.forEach((button, idx) => { if (button.pressed) { console.log(`button ${idx}: ${button.value}`); } });
+        const multiplier = gamepad.buttons[0].value * 9 + 1;
+
+        if (gamepad.buttons[1].pressed) {
+          cesiumCamera.moveUp(gamepad.buttons[1].value * 10 * multiplier);
+        }
+
+	      const axes = gamepad.axes;
+        if (axes[2] !== 0) {
+          cesiumCamera.moveRight(axes[2] * 10 * multiplier);
+        }
+        if (axes[3] !== 0) {
+          cesiumCamera.moveBackward(axes[3] * 10 * multiplier);
+        }
+	    }
+    }
 	  cesiumScene.render();
   } else {
 	  cesiumCamera.position = new_position;

@@ -149,12 +149,27 @@ For Oculus/Meta Quest, Pico, HTC Vive Focus, [etc](https://vr-compare.com/standa
 
 ### Interaction
 
+#### Legacy
+
 - Hit `Enter` to make the browser fullscreen and enter VR mode.
 - The mouse can be used on the left eye to navigate.  Number keys take
   you to some pre-set locations. Hit `L` at any time to level the
   camera to the globe surface.
 - The `WASD` keys allow horizontal movement with `Q` and `E` allowing
   vertical movement. Holding `Shift` speeds up all movement.
+
+#### Meta Quest 2
+
+- As expected, use the HMD to point the camera in 3DoF. You should
+  interact while standing or sitting on a rotating seat.
+- Both left and right controls work the same, at the same time, but
+  all interaction can be achieved with one control.
+- Relative to the camera orientation, the stick will translate forwards
+  and laterally (±X and ±Z).
+- Use the thumb trigger to go up, relative to the camera orientation (+Y).
+- Use the main trigger to amplify movement, up to 10 times faster.
+- Tip: if you want advance while looking down but don't want to lose
+  altitude, press the thumb trigger lightly to compensate.
 
 If you are having any problems, visit the [WebXR Sample
 Pages](https://immersive-web.github.io/webxr-samples/) to check you
