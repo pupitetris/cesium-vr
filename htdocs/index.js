@@ -94,9 +94,9 @@ async function createScene(canvas) {
 	  }
   );
 
+  scene.webXRContext = {};
   scene.useWebVR = true;
 //  scene.useWebXR = false;
-  scene.webXRContext = {};
   scene.rethrowRenderErrors = true;
   //scene.focalLength = 5.0;
   //scene.eyeSeparation = camera.frustum.near * 5.0 / 30.0;
